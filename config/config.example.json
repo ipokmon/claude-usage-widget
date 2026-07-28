@@ -1,0 +1,34 @@
+{
+  "_comment": "Copy to config.json and fill in. config.json is gitignored - NEVER commit it.",
+
+  "sessionCookie": "sessionKey=sk-ant-sid01-REPLACE-ME",
+
+  "_endpoint_help": "The undocumented internal URL claude.ai calls to render Plan usage limits. Capture it from DevTools > Network, then paste here. Use {orgId} as a placeholder and it will be substituted.",
+  "endpoint": "",
+
+  "orgId": "",
+
+  "pollIntervalMinutes": 10,
+
+  "_fieldMap_help": "Maps the endpoint's JSON shape onto the widget's three metrics. 'pct' and 'resets_at' are dot/bracket paths into the response (e.g. 'five_hour.utilization' or 'limits[0].pct'). 'scale' multiplies the raw value (use 100 if the API returns 0.0-1.0, use 1 if it already returns 0-100). 'invert' converts a REMAINING value into a USED percentage. Run 'node poller/probe.mjs' to dump the real response and get suggested paths.",
+  "fieldMap": {
+    "session": {
+      "pct": "",
+      "resets_at": "",
+      "scale": 100,
+      "invert": false
+    },
+    "weekly": {
+      "pct": "",
+      "resets_at": "",
+      "scale": 100,
+      "invert": false
+    },
+    "weekly_fable": {
+      "pct": "",
+      "resets_at": "",
+      "scale": 100,
+      "invert": false
+    }
+  }
+}

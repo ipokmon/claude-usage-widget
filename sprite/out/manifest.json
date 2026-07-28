@@ -1,0 +1,50 @@
+{
+  "idle": {
+    "frames": 4,
+    "w": 224,
+    "h": 56,
+    "bytes": 2863
+  },
+  "walk": {
+    "frames": 4,
+    "w": 224,
+    "h": 56,
+    "bytes": 2471
+  },
+  "stretch": {
+    "frames": 4,
+    "w": 224,
+    "h": 56,
+    "bytes": 2989
+  },
+  "coffee": {
+    "frames": 4,
+    "w": 224,
+    "h": 56,
+    "bytes": 2967
+  },
+  "work": {
+    "frames": 2,
+    "w": 112,
+    "h": 56,
+    "bytes": 1592
+  },
+  "read": {
+    "frames": 4,
+    "w": 224,
+    "h": 56,
+    "bytes": 2923
+  },
+  "yawn": {
+    "frames": 4,
+    "w": 224,
+    "h": 56,
+    "bytes": 3101
+  },
+  "sleep": {
+    "frames": 4,
+    "w": 224,
+    "h": 56,
+    "bytes": 2171
+  }
+}

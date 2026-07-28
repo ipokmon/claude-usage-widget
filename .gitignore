@@ -1,0 +1,16 @@
+# ---------------------------------------------------------------------------
+# SECRETS — never commit. config.json holds your claude.ai session cookie.
+# ---------------------------------------------------------------------------
+config/config.json
+config/*.local.json
+
+# Local data cache (contains your personal usage numbers)
+cache/
+*.log
+
+# Endpoint capture notes may contain headers/cookies from DevTools
+capture/
+*.har
+
+# macOS
+.DS_Store

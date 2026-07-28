@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.ivan.claude-usage-poller</string>
+
+  <!-- Absolute paths required: launchd runs with a minimal PATH. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>/Users/ivanwu/Desktop/claude/claudetoken widget/poller/poll.mjs</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/ivanwu/Desktop/claude/claudetoken widget</string>
+
+  <!-- 600s = 10 minutes. Deliberately conservative: this is an undocumented
+       internal endpoint, and usage limits move slowly enough that polling
+       harder buys nothing but rate-limit risk. -->
+  <key>StartInterval</key>
+  <integer>600</integer>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/ivanwu/Desktop/claude/claudetoken widget/poller.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/ivanwu/Desktop/claude/claudetoken widget/poller.log</string>
+</dict>
+</plist>
