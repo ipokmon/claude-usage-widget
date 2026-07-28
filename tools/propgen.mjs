@@ -345,29 +345,31 @@ function armchair() {
 
 /** Window frame; `night` swaps the sky and the sun for a moon and stars. */
 function windowPane(night) {
-  const img = mk(32, 26);
-  rect(img, 0, 0, 32, 26, C.w);                 // frame
-  rect(img, 1, 1, 30, 24, C.k);                 // inner shadow line
-  rect(img, 2, 2, 28, 22, night ? C.n : C.b);   // sky
+  const W = 42, H = 34;
+  const SKY_B = H - 6;                           // sky bottom, leaving the sill
+  const img = mk(W, H);
+  rect(img, 0, 0, W, H, C.w);                    // frame
+  rect(img, 1, 1, W - 2, H - 2, C.k);            // inner shadow line
+  rect(img, 2, 2, W - 4, SKY_B - 2, night ? C.n : C.b);
   if (night) {
-    rect(img, 20, 5, 5, 5, C.s);                // moon
-    rect(img, 19, 6, 1, 3, C.s);
-    rect(img, 25, 6, 1, 3, C.s);
-    rect(img, 22, 4, 1, 1, C.s);
-    for (const [sx, sy] of [[6, 6], [10, 4], [14, 9], [7, 13], [17, 15], [12, 18], [24, 16]]) {
-      px(img, sx, sy, C.s);
-    }
+    rect(img, 27, 6, 7, 7, C.s);                 // moon
+    rect(img, 26, 7, 1, 5, C.s);
+    rect(img, 34, 7, 1, 5, C.s);
+    rect(img, 29, 5, 3, 1, C.s);
+    for (const [sx, sy] of [[6, 7], [12, 4], [17, 10], [8, 16], [21, 19], [14, 23],
+                            [31, 20], [35, 16], [5, 22], [24, 6]]) px(img, sx, sy, C.s);
   } else {
-    rect(img, 2, 2, 28, 8, C.B);                // brighter band near the top
-    rect(img, 20, 4, 6, 6, C.y);                // sun
-    rect(img, 19, 5, 1, 4, C.y);
-    rect(img, 26, 5, 1, 4, C.y);
-    rect(img, 6, 14, 9, 3, C.c);                // cloud
-    rect(img, 8, 12, 5, 2, C.c);
+    rect(img, 2, 2, W - 4, 11, C.B);             // brighter band near the top
+    rect(img, 27, 5, 8, 8, C.y);                 // sun
+    rect(img, 26, 6, 1, 6, C.y);
+    rect(img, 35, 6, 1, 6, C.y);
+    rect(img, 6, 20, 12, 4, C.c);                // cloud
+    rect(img, 9, 17, 7, 3, C.c);
   }
-  rect(img, 15, 2, 2, 22, C.w);                 // mullions
-  rect(img, 2, 12, 28, 2, C.w);
-  rect(img, 0, 24, 32, 2, C.W);                 // sill
+  rect(img, 20, 2, 2, SKY_B - 2, C.w);           // mullions
+  rect(img, 2, 15, W - 4, 2, C.w);
+  rect(img, 0, SKY_B, W, 3, C.W);                // sill
+  rect(img, 0, H - 1, W, 1, C.k);
   return img;
 }
 
