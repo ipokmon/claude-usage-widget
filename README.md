@@ -16,9 +16,12 @@ pixel-art character whose activity follows the time of day.
 └─────────────────────────────────┘
 ```
 
-**It renders two bars, not three.** The 5-hour and weekly-all-models limits are
-the only ones this account's payload actually populates — see
-[Known-fragile points](#️-known-fragile-points).
+**It renders two bars, not three.** The weekly-Fable limit exists in the payload
+(inside the `limits` array, scoped by model display name) but reads 0%, so it is
+deliberately left unmapped — see [Known-fragile points](#️-known-fragile-points).
+
+The payload contains **no token counts** of any kind, only percentages, reset
+times and credit amounts.
 
 ## Why Übersicht and not a native widget
 

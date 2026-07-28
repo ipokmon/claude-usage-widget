@@ -119,8 +119,22 @@ over a websocket on connect, so reload the page rather than touching the `.jsx`.
 
 ## Current state
 
-Live scrape works. Only **two** bars render, not three: the payload has no
-`fable` key and every per-model weekly bucket was `null` on this account, so
-`weekly_fable` is intentionally left unmapped in `config/config.json` rather
-than guessed. If one populates, `node poller/probe.mjs` surfaces its path — then
-set the label in `poller/lib.mjs` to match whichever model it actually is.
+Live scrape works. Only **two** bars render, not three — by choice, not because
+the data is missing.
+
+The payload carries a `limits` array (easy to miss: it sits after the
+`seven_day_*` keys, and an early truncated capture hid it). The entry with
+`kind: "weekly_scoped"` and `scope.model.display_name == "Fable"` **is** the
+weekly Fable limit. It reads 0% with `is_active: false`, which is also why every
+`seven_day_*` key is `null`.
+
+Ivan chose to leave it unmapped while it reads zero. To enable it, point
+`weekly_fable.pct` at that entry's `percent` — match on
+`scope.model.display_name`, not a fixed index like `limits[2]`, since nothing
+guarantees the array order.
+
+**There is no token count anywhere in the payload** — only percentages, reset
+times and dollar/credit amounts. Asked for in this session and confirmed absent;
+don't go looking again. Claude Code's own transcripts under
+`~/.claude/projects/**/*.jsonl` do carry per-message token usage, but that is
+this machine's Claude Code activity only, not the account.
