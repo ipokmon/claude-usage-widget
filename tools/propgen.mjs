@@ -236,26 +236,51 @@ function lamp() {
   return img;
 }
 
-// A plank with books of varying height leaning on it.
-function shelf() {
-  const img = mk(30, 15);
-  const books = [
-    { x: 2, w: 4, h: 10, c: C.r },
-    { x: 7, w: 3, h: 8, c: C.R },
-    { x: 11, w: 4, h: 11, c: C.p },
-    { x: 16, w: 3, h: 9, c: C.m },
-    { x: 20, w: 4, h: 7, c: C.R },
-    { x: 25, w: 3, h: 10, c: C.r },
-  ];
-  for (const b of books) {
-    const top = 12 - b.h;
-    rect(img, b.x, top, b.w, b.h, b.c);
-    rect(img, b.x, top, b.w, 1, C.k);          // dark top edge
-    rect(img, b.x, top + 2, b.w, 1, C.c);      // title band
+/**
+ * Full-height bookcase standing on the floor, four bays deep in books.
+ *
+ * The book layout is pseudo-random from a fixed seed rather than hand-placed:
+ * forty-odd spines is too many to author by hand, and a fixed seed keeps the
+ * output identical on every regeneration, so the art never shifts underneath
+ * the widget.
+ */
+function bookcase() {
+  const W = 44, H = 52;
+  const img = mk(W, H);
+
+  rect(img, 0, 0, W, H, C.w);                    // carcass
+  rect(img, 2, 2, W - 4, H - 5, [32, 26, 24]);   // recessed interior
+
+  const spines = [C.r, C.R, C.m, C.p, C.v, C.P, C.u];
+  let seed = 11;
+  const rnd = (n) => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) >> 9) % n;
+
+  for (const top of [2, 14, 26, 38]) {
+    const boardY = top + 11;
+    let x = 3;
+    for (;;) {
+      const bw = 2 + rnd(3);
+      if (x + bw > W - 3) break;
+      const bh = 7 + rnd(5);
+      const y = boardY - bh;
+      rect(img, x, y, bw, bh, spines[rnd(spines.length)]);
+      rect(img, x, y, bw, 1, C.k);               // dark top edge
+      if (bw > 2) rect(img, x + 1, y + 3, bw - 2, 1, C.c);  // title band
+      x += bw;
+    }
+    rect(img, 2, boardY, W - 4, 1, C.W);         // shelf board
+    rect(img, 2, boardY + 1, W - 4, 1, C.k);     // shadow under it
   }
-  rect(img, 0, 12, 30, 2, C.w);                 // plank
-  rect(img, 0, 12, 30, 1, C.W);                 // lit top of plank
-  rect(img, 0, 14, 30, 1, C.k);                 // shadow under plank
+
+  rect(img, 0, 0, W, 2, C.w);                    // top
+  rect(img, 0, 0, W, 1, C.W);
+  rect(img, 0, 0, 2, H, C.w);                    // side panels
+  rect(img, W - 2, 0, 2, H, C.w);
+  rect(img, 0, 0, 1, H, C.W);
+  rect(img, W - 1, 0, 1, H, C.k);
+  rect(img, 0, H - 3, W, 3, C.w);                // plinth
+  rect(img, 0, H - 3, W, 1, C.W);
+  rect(img, 0, H - 1, W, 1, C.k);
   return img;
 }
 
@@ -409,10 +434,10 @@ const BUILD = {
   rug: rug(),                                        // has its own shadow row
   fireplace: withContactShadow(fireplace()),         // bottom -2
   lamp: withContactShadow(lamp()),                   // bottom -2
-  // No baked drop shadow on the wall props: their cast shadow is now a
-  // directional CSS filter that follows the room's light, and a second baked
-  // one pointing a fixed way would fight it.
-  shelf: shelf(),
+  bookcase: withContactShadow(bookcase()),           // bottom -2
+  // No baked drop shadow on the window: its cast shadow is now a directional
+  // CSS filter that follows the room's light, and a second baked one pointing
+  // a fixed way would fight it.
   windowDay: windowPane(false),
   windowNight: windowPane(true),
   armchair: withContactShadow(outline(armchair())),  // bottom -2

@@ -236,14 +236,19 @@ pinned to `bottom: 19px` to put the feet on the line. Change one, change both.
 ## Scenery
 
 The stage also has background props — a string of lights across the top, a
-floor lamp, a window, a wall shelf of books, an armchair on a rug, a lit stone
+floor lamp, a window, a full-height bookcase, an armchair on a rug, a lit stone
 fireplace, and a potted plant — so the character isn't standing in an empty
 void. They are decorative only and always sit behind the actor.
 
 Left to right the room reads: lamp, the character's working area, window,
-shelf, armchair on the rug, fireplace, plant. The fireplace claims the right
+bookcase, armchair on the rug, fireplace, plant. The fireplace claims the right
 side, which is why the window and rug sit further left than the space would
 otherwise suggest.
+
+The bookcase's forty-odd book spines are laid out pseudo-randomly from a
+**fixed seed**, not hand-placed. Too many to author by hand, and the fixed seed
+means every regeneration produces identical art rather than reshuffling the
+shelves underneath you.
 
 ```bash
 node tools/propgen.mjs

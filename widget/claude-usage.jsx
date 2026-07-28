@@ -120,7 +120,7 @@ const PROPS = {
   rug: { w: 112, h: 5, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAAAFCAYAAACdD2g5AAAAQElEQVR42mNgQALn6pL+j+LBjxmwga2p3v9H8dDBZOe6T8/vYOBRffTXhzU3jqbsIZb7cAErLaX/o3jwYWxxBQALPgYpg3ZDlQAAAABJRU5ErkJggg==" },
   fireplace: { w: 46, h: 48, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAwCAYAAABuZUjcAAABDklEQVR42u3ZMQoCMRAF0BxCLCwtrWRLD2ApFhaWIpZbWFmIR/AkHsSzeAabaIqAhp24xskkH0f44MIuvM0Ov0jM5bSyiDHn3dwiBhc+m4wtYoz/uYvjvq06b2CFKzwBvl4uqk50xd0NKash8ZzCq4FDzzj1ppKhvkYSfDQYiuS/4LHZkoSz9XipFf+5DhWeCw4941qHCi8w47dDg9fjDu0DVYcQ8BD3iv4WL9bjXbhP8NiLiPV4iLtft2T6jJBIHXatLAQ8huwb8R7nQFPwrD3OBQ/x2esQEs59LCLW49ynC2I9nhvOWoeQG0KS+4Ox5/REoii89h1aKqb2VaaCC4c+WX7+2SAlbJUpQrz3AahWZWR8X51pAAAAAElFTkSuQmCC" },
   lamp: { w: 14, h: 38, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAmCAYAAAD0t6qKAAAAZElEQVR42mNgQANWWkr/sWEGfACk4NPzO1gxXs1kacSnCa9msjQSowmrZrI0gjVdaCEJ4w3hVTUh/3tS3PDH36jGUY2jGkc1jmokCECKsWGC9SM+TD2NQMEEUjC6ZgNiMAOlAABhBJ8ycWJs/AAAAABJRU5ErkJggg==" },
-  shelf: { w: 30, h: 15, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAPCAYAAADzun+cAAAAhUlEQVR42mNgGArASkvpPzKmm6FbU73/I2NyzMaQ3FSR9B8ZYzPg0/M7/5ExQUOxmE2Wodh8PK0s4T8M47IY3VyCPu6aMu8/DOOyGJ9jYQ7G62NsFqMbSoyPkR0LczDJFhPjY3SLsUUZXSweMB+PWozT4lU1If8HAjP0pLj9HwiMkeHphQGOiabHkUz+KwAAAABJRU5ErkJggg==" },
+  bookcase: { w: 44, h: 54, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAA2CAYAAAC8yXv8AAACMElEQVR42u2aMU7DQBBFfQxEhSipqDkADW0qqigCaiqEEOIAiBKl5ACUSFwjJ6Cn5wIma+mj8WdnvTsbY6/YSF/EWXv9GE9m/tppXu8X7dPFaev+zlmO8eTosG2wUYJ6wAf7e90HIbl9pEJjOfLN6QV+vzzraX2z7IknDo1ZAKH13XWn2QJvHlY9AVhGWgX++vzoBGBsu/d8qTDuA05JLw0Y2+YIPz6/dPq5dGKMgRiCxfsiMKMAY0I5trg672kIOKTJgGXUfNuTAwMoNsIafE2JCmwBLs78DBX6qeVNCRZSAIr1ArsyPINewgrM+WsBHjo2yl46SNTWFOAYa6rNoR3rBeYTc4S1/OKmIasHKs5QjuKc2F9WDTMwlx/eH/IBv92ueuKSaQaWkcoBhu3MAUbrzoqwNDCpEcaxAJZe+/+kRAUeC7h6iSm8hNbv5aWy+AOkRYofCbZmbRKcSAPm/bnLhYCH7oF4gTGRtlRnYK298heIfQKfh28ZJANrKwEe16qEBoxqwxXD10jMwLKzxQDL1p4K/CcRloCWCMtWXVxKVOAKnANcvcQcvESO2KpqtwaQRqZlfmh5nvpkKRU4apmPL5Nvaa89kNEMEnsFvsfBTYeBpZKAfSeXZoUjJYE5qqEIs8NLBkYktFIXAka7TQHG5xIUT7NMEQ4By0vLEcY/bgHOSolfj6Z2nBKjAMemRAUuHrgkNaX8uANq5m56WI17bd8sS1AjX9sPjucscH4De9GLbG8DAAsAAAAASUVORK5CYII=" },
   windowDay: { w: 42, h: 34, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAiCAYAAAApkEs2AAAAkElEQVR42mPoSXH7PxQwA4iw0lIa1BjFofP236AKhoUAtcwbdeiwcOinCy148aBwKCFH4nLsqENHHTrq0KHqUKoVT3WLjlAFwxxKLfOGrkMHa/Nu6DoUX/B/en4HJx5UaXTUodRwKD7H4XPwqENHHTria6ZRh444h66qCfk/FPCoQ6nu0CE3mjfoHTrYHQnDAHPT5LyX0A80AAAAAElFTkSuQmCC" },
   windowNight: { w: 42, h: 34, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAiCAYAAAApkEs2AAAAmklEQVR42mPoSXH7PxQwA4iw0lIa1BjFoSY2MVTBsBCglnnD36FvPvwYOSEK8iwMDxqHIjsG2YHomGyHEuNbUkIUnyPxOZbuUT/qUFIwsiWjIUrP4okmuX60CqXUoYO1eTd0HTqaRkcdSkeHDqpmHk1DlNwm3qCMelyeGc1Mow4dsQ5dVRPyfyjgUYdS3aFDbjRv0Dt0sDsShgH64wUKJwBlawAAAABJRU5ErkJggg==" },
   armchair: { w: 30, h: 30, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAhklEQVR42mNgGLHASkvpPz5MM0vzmkrwYppYPqAWh6RF4cWjFg86i0nKGdSymJA5GGYMC4tJypLEWkwMpprFhAoWUvCoxUTFMbF4wCwmKVeMWjxqcUSAHxwTW4Kh6yGrcCfKEDTziNZDsevJtZiahlDFYvTQoLoeoIIEWmN8lhvQCg+aLhMAguPYRYSHP5cAAAAASUVORK5CYII=" },
@@ -463,7 +463,7 @@ const CSS = `
 /* wider window sits further left so it keeps clear of the shelf at x=152 */
 .cw-prop-windowDay,
 .cw-prop-windowNight { left: 96px;  bottom: 34px; }
-.cw-prop-shelf       { left: 152px; bottom: 60px; }
+.cw-prop-bookcase    { left: 146px; bottom: 19px; }
 .cw-prop-armchair    { left: 196px; bottom: 19px; }
 .cw-prop-fireplace   { left: 254px; bottom: 19px; }
 .cw-prop-plant       { left: 316px; bottom: 19px; }
@@ -524,14 +524,14 @@ const CSS = `
    prop rather than computed - there are only a handful and eyeballing beats a
    formula at this scale. The ceiling string is deliberately excluded.        */
 [data-theme="light"] .cw-prop-lamp       { filter: drop-shadow(-3px 1px 1px rgba(28,20,14,0.40)); }
-[data-theme="light"] .cw-prop-shelf      { filter: drop-shadow(3px 2px 1px rgba(28,20,14,0.40)); }
+[data-theme="light"] .cw-prop-bookcase   { filter: drop-shadow(3px 2px 1px rgba(28,20,14,0.40)); }
 [data-theme="light"] .cw-prop-armchair   { filter: drop-shadow(3px 1px 1px rgba(28,20,14,0.42)); }
 [data-theme="light"] .cw-prop-fireplace  { filter: drop-shadow(2px 1px 1px rgba(28,20,14,0.32)); }
 [data-theme="light"] .cw-prop-plant      { filter: drop-shadow(3px 1px 1px rgba(28,20,14,0.42)); }
 
 [data-theme="dark"] .cw-prop-windowDay,
 [data-theme="dark"] .cw-prop-windowNight { filter: drop-shadow(-3px 2px 1px rgba(0,0,0,0.50)); }
-[data-theme="dark"] .cw-prop-shelf       { filter: drop-shadow(-3px 2px 1px rgba(0,0,0,0.50)); }
+[data-theme="dark"] .cw-prop-bookcase    { filter: drop-shadow(-3px 2px 1px rgba(0,0,0,0.50)); }
 [data-theme="dark"] .cw-prop-armchair    { filter: drop-shadow(-4px 1px 1px rgba(0,0,0,0.55)); }
 [data-theme="dark"] .cw-prop-plant       { filter: drop-shadow(3px 1px 1px rgba(0,0,0,0.50)); }
 
