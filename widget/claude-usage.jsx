@@ -120,9 +120,9 @@ const PROPS = {
   rug: { w: 112, h: 5, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAAAFCAYAAACdD2g5AAAAQElEQVR42mNgQALn6pL+j+LBjxmwga2p3v9H8dDBZOe6T8/vYOBRffTXhzU3jqbsIZb7cAErLaX/o3jwYWxxBQALPgYpg3ZDlQAAAABJRU5ErkJggg==" },
   fireplace: { w: 46, h: 48, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAwCAYAAABuZUjcAAABDklEQVR42u3ZMQoCMRAF0BxCLCwtrWRLD2ApFhaWIpZbWFmIR/AkHsSzeAabaIqAhp24xskkH0f44MIuvM0Ov0jM5bSyiDHn3dwiBhc+m4wtYoz/uYvjvq06b2CFKzwBvl4uqk50xd0NKash8ZzCq4FDzzj1ppKhvkYSfDQYiuS/4LHZkoSz9XipFf+5DhWeCw4941qHCi8w47dDg9fjDu0DVYcQ8BD3iv4WL9bjXbhP8NiLiPV4iLtft2T6jJBIHXatLAQ8huwb8R7nQFPwrD3OBQ/x2esQEs59LCLW49ynC2I9nhvOWoeQG0KS+4Ox5/REoii89h1aKqb2VaaCC4c+WX7+2SAlbJUpQrz3AahWZWR8X51pAAAAAElFTkSuQmCC" },
   lamp: { w: 14, h: 38, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAmCAYAAAD0t6qKAAAAZElEQVR42mNgQANWWkr/sWEGfACk4NPzO1gxXs1kacSnCa9msjQSowmrZrI0gjVdaCEJ4w3hVTUh/3tS3PDH36jGUY2jGkc1jmokCECKsWGC9SM+TD2NQMEEUjC6ZgNiMAOlAABhBJ8ycWJs/AAAAABJRU5ErkJggg==" },
-  shelf: { w: 31, h: 17, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAARCAYAAAAlpHdJAAAAl0lEQVR42mNgGCrASkvpPzKmq8FbU73/I2NyzMaqYFNF0n9kjE3Np+d3/iNjoGEOxIQEIXOJMhjd5yA108oS/sMwLsvRzSXoc5Cirinz/sMwLsvxORjmaHRzibIc3WBCPkd3MMzRZFmObAixlmOLPrpZju7zUcsHn+WrakL+DwQGW96T4vZ/IDDWMp2O2AHmAIeBwANqOQDDavc3P64BvgAAAABJRU5ErkJggg==" },
-  windowDay: { w: 33, h: 28, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAcCAYAAADvANYcAAAAfUlEQVR42mPoSXH7P5CYAQRADCstpQHBGI6Yt/8GyRjmG3L0whwBpB2GpyM+XWjBiunmCFwOwOaQUUeMDEdQnDDrFh0hGcMcQY7ewesIetcZg9cR6MH16fkdgpjmaWLUEaNZdNQRo44YVI5YVRPyfyDx4HEECIAYA4kHhSMA+ykLLwP0TSEAAAAASUVORK5CYII=" },
-  windowNight: { w: 33, h: 28, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAcCAYAAADvANYcAAAAhklEQVR42mPoSXH7P5CYAQRADCstpQHBGI4wsYkhGcN8Q45emCOAtMPQcsSbDz9IcgQ29XQLCZDl6JhsRxDyCTZHYHMALofQLCRGpiNABtM8TYzccoLedcbgdcSQTxPEFGwDmjCHbxZF9tnIbE+MOmLkOGJVTcj/gcSDxxEgAGIMJB4UjgAAw1bEqzWYp8UAAAAASUVORK5CYII=" },
+  shelf: { w: 30, h: 15, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAPCAYAAADzun+cAAAAhUlEQVR42mNgGArASkvpPzKmm6FbU73/I2NyzMaQ3FSR9B8ZYzPg0/M7/5ExQUOxmE2Wodh8PK0s4T8M47IY3VyCPu6aMu8/DOOyGJ9jYQ7G62NsFqMbSoyPkR0LczDJFhPjY3SLsUUZXSweMB+PWozT4lU1If8HAjP0pLj9HwiMkeHphQGOiabHkUz+KwAAAABJRU5ErkJggg==" },
+  windowDay: { w: 32, h: 26, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAYAAADWm14/AAAAb0lEQVR42mPoSXH7P5CYAURYaSkNCEZxwLz9N0jGMF+Qo3f4OuDThRasmC4OwGU5NkeMOmB4OoCiRFi36AjJGOYAcvQOPgfQuw4YfA5AD6JPz+8QxDRNA6MOGHnZcNQBow4YMAesqgn5P5B4wB0AAKVxxxD3k34pAAAAAElFTkSuQmCC" },
+  windowNight: { w: 32, h: 26, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAYAAADWm14/AAAAd0lEQVR42mPoSXH7P5CYAURYaSkNCEZxgIlNDMkY5gty9A49B7z58IMkB2BTT5cQAFmMjslyACEfYHMANstxOYImITCyHAAylKZpYOSVA/SuAwafA4Z0GiCm0BqwRDj8siGyj0ZWe2DUAcPXAatqQv4PJB5wBwAAOkeAmzrwllcAAAAASUVORK5CYII=" },
   armchair: { w: 30, h: 30, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAhklEQVR42mNgGLHASkvpPz5MM0vzmkrwYppYPqAWh6RF4cWjFg86i0nKGdSymJA5GGYMC4tJypLEWkwMpprFhAoWUvCoxUTFMbF4wCwmKVeMWjxqcUSAHxwTW4Kh6yGrcCfKEDTziNZDsevJtZiahlDFYvTQoLoeoIIEWmN8lhvQCg+aLhMAguPYRYSHP5cAAAAASUVORK5CYII=" },
   plant: { w: 18, h: 26, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAaCAYAAAC6nQw6AAAAlklEQVR42mNgwAGstJT+g3BOTwYYw/gMxAJ0A1qW1YExSQZiMwAdIxuI1xBcBmAzEMMwXIage42gYaS6hixXkWQIqYbhNYSYmCMYY/jSErorSEqU2FxHlgFUMQjmfFx5jegsQgomaNC5uiS8eAgaRIxhRKclqhu0NdUbK6a/QfgMI7sCoJpBJKdoqOYEcjAuwwxIwch6ATVqLpN0z/GeAAAAAElFTkSuQmCC" },
 };
@@ -188,6 +188,7 @@ const CYCLE_SECONDS = {
  */
 const Actor = () => (
   <div className="cw-actor">
+    <div className="cw-flip">
     {Object.entries(SPRITES).map(([state, s]) => (
       <div className={`cw-sprite cw-s-${state}`} key={state}>
         <div
@@ -200,6 +201,7 @@ const Actor = () => (
         />
       </div>
     ))}
+    </div>
   </div>
 );
 
@@ -459,8 +461,8 @@ const CSS = `
 .cw-prop-lights      { left: 12px;  bottom: 74px; }
 .cw-prop-lamp        { left: 6px;   bottom: 19px; }
 .cw-prop-windowDay,
-.cw-prop-windowNight { left: 104px; bottom: 34px; }
-.cw-prop-shelf       { left: 152px; bottom: 58px; }
+.cw-prop-windowNight { left: 104px; bottom: 36px; }
+.cw-prop-shelf       { left: 152px; bottom: 60px; }
 .cw-prop-armchair    { left: 196px; bottom: 19px; }
 .cw-prop-fireplace   { left: 254px; bottom: 19px; }
 .cw-prop-plant       { left: 316px; bottom: 19px; }
@@ -509,7 +511,59 @@ const CSS = `
   bottom: 19px;
   width: 56px; height: 56px;
 }
+/* Facing lives here, NOT on .cw-actor. A filter is applied before transform,
+   so a scaleX(-1) on the element carrying the shadow would mirror the shadow
+   with it and the character would light from the wrong side mid-walk. */
+.cw-flip { position: absolute; inset: 0; }
 .cw-sprite { position: absolute; inset: 0; opacity: 0; }
+
+/* ---- cast shadows ----
+   One dominant light per theme: the window (x~120) by day, the fire (x~277)
+   after dark. Everything throws away from it, and the offsets are hand-set per
+   prop rather than computed - there are only a handful and eyeballing beats a
+   formula at this scale. The ceiling string is deliberately excluded.        */
+[data-theme="light"] .cw-prop-lamp       { filter: drop-shadow(-3px 1px 1px rgba(28,20,14,0.40)); }
+[data-theme="light"] .cw-prop-shelf      { filter: drop-shadow(3px 2px 1px rgba(28,20,14,0.40)); }
+[data-theme="light"] .cw-prop-armchair   { filter: drop-shadow(3px 1px 1px rgba(28,20,14,0.42)); }
+[data-theme="light"] .cw-prop-fireplace  { filter: drop-shadow(2px 1px 1px rgba(28,20,14,0.32)); }
+[data-theme="light"] .cw-prop-plant      { filter: drop-shadow(3px 1px 1px rgba(28,20,14,0.42)); }
+
+[data-theme="dark"] .cw-prop-windowDay,
+[data-theme="dark"] .cw-prop-windowNight { filter: drop-shadow(-3px 2px 1px rgba(0,0,0,0.50)); }
+[data-theme="dark"] .cw-prop-shelf       { filter: drop-shadow(-3px 2px 1px rgba(0,0,0,0.50)); }
+[data-theme="dark"] .cw-prop-armchair    { filter: drop-shadow(-4px 1px 1px rgba(0,0,0,0.55)); }
+[data-theme="dark"] .cw-prop-plant       { filter: drop-shadow(3px 1px 1px rgba(0,0,0,0.50)); }
+
+/* After dark the character is always left of the fire, so its shadow never
+   needs to flip - only the daytime walk crosses the window. */
+[data-theme="dark"] .cw-actor { filter: drop-shadow(-3px 2px 1px rgba(0,0,0,0.50)); }
+
+[data-theme="light"][data-activity="day"] .cw-actor {
+  animation: cw-day-move 48s linear infinite, cw-day-shadow 48s steps(1) infinite;
+}
+[data-theme="light"][data-activity="evening"] .cw-actor {
+  animation: cw-eve-move 40s linear infinite, cw-eve-shadow 40s steps(1) infinite;
+}
+[data-theme="light"][data-activity="morning"] .cw-actor {
+  animation: cw-mor-move 26s linear infinite, cw-mor-shadow 26s steps(1) infinite;
+}
+/* Flip points are where the character's centre (translateX + 28) passes the
+   window at x=120, i.e. translateX = 92, solved along each walk segment. */
+@keyframes cw-day-shadow {
+  0%,51.2%    { filter: drop-shadow(-3px 2px 1px rgba(28,20,14,0.45)); }
+  51.4%,69.5% { filter: drop-shadow(3px 2px 1px rgba(28,20,14,0.45)); }
+  69.7%,100%  { filter: drop-shadow(-3px 2px 1px rgba(28,20,14,0.45)); }
+}
+@keyframes cw-eve-shadow {
+  0%,11.4%    { filter: drop-shadow(-3px 2px 1px rgba(28,20,14,0.45)); }
+  11.6%,62.3% { filter: drop-shadow(3px 2px 1px rgba(28,20,14,0.45)); }
+  62.5%,100%  { filter: drop-shadow(-3px 2px 1px rgba(28,20,14,0.45)); }
+}
+@keyframes cw-mor-shadow {
+  0%,30.3%    { filter: drop-shadow(-3px 2px 1px rgba(28,20,14,0.45)); }
+  30.5%,82.2% { filter: drop-shadow(3px 2px 1px rgba(28,20,14,0.45)); }
+  82.4%,100%  { filter: drop-shadow(-3px 2px 1px rgba(28,20,14,0.45)); }
+}
 .cw-film {
   position: absolute; inset: 0;
   background-repeat: no-repeat;
@@ -525,17 +579,20 @@ const CSS = `
    At the desk, then a walk across the stage, a stretch at the far
    end, and a walk back. Real traversal, not a frame swap.          */
 [data-activity="day"] .cw-actor     { animation: cw-day-move 48s linear infinite; }
+[data-activity="day"] .cw-flip      { animation: cw-day-face 48s steps(1) infinite; }
 [data-activity="day"] .cw-s-work    { animation: cw-day-work 48s steps(1) infinite; }
 [data-activity="day"] .cw-s-walk    { animation: cw-day-walk 48s steps(1) infinite; }
 [data-activity="day"] .cw-s-stretch { animation: cw-day-stretch 48s steps(1) infinite; }
 
 @keyframes cw-day-move {
-  0%,49.5% { transform: translateX(30px) scaleX(1); }
-  56%      { transform: translateX(250px) scaleX(1); }
-  64.5%    { transform: translateX(250px) scaleX(1); }
-  65%      { transform: translateX(250px) scaleX(-1); }
-  71.5%    { transform: translateX(30px) scaleX(-1); }
-  72%,100% { transform: translateX(30px) scaleX(1); }
+  0%,49.5%   { transform: translateX(30px); }
+  56%,65%    { transform: translateX(250px); }
+  71.5%,100% { transform: translateX(30px); }
+}
+@keyframes cw-day-face {
+  0%,64.9%   { transform: scaleX(1); }
+  65%,71.9%  { transform: scaleX(-1); }
+  72%,100%   { transform: scaleX(1); }
 }
 @keyframes cw-day-work    { 0%,49.4%{opacity:1} 49.5%,71.9%{opacity:0} 72%,100%{opacity:1} }
 @keyframes cw-day-walk    { 0%,49.4%{opacity:0} 49.5%,56%{opacity:1} 56.1%,64.9%{opacity:0} 65%,71.9%{opacity:1} 72%,100%{opacity:0} }
@@ -544,18 +601,21 @@ const CSS = `
 /* ========================= EVENING (40s) =========================
    Strolls out, reads a while, stretches, strolls back.             */
 [data-activity="evening"] .cw-actor     { animation: cw-eve-move 40s linear infinite; }
+[data-activity="evening"] .cw-flip      { animation: cw-eve-face 40s steps(1) infinite; }
 [data-activity="evening"] .cw-s-idle    { animation: cw-eve-idle 40s steps(1) infinite; }
 [data-activity="evening"] .cw-s-walk    { animation: cw-eve-walk 40s steps(1) infinite; }
 [data-activity="evening"] .cw-s-read    { animation: cw-eve-read 40s steps(1) infinite; }
 [data-activity="evening"] .cw-s-stretch { animation: cw-eve-stretch 40s steps(1) infinite; }
 
 @keyframes cw-eve-move {
-  0%,8%    { transform: translateX(26px) scaleX(1); }
-  17%      { transform: translateX(196px) scaleX(1); }
-  56.5%    { transform: translateX(196px) scaleX(1); }
-  57%      { transform: translateX(196px) scaleX(-1); }
-  66%      { transform: translateX(26px) scaleX(-1); }
-  66.5%,100% { transform: translateX(26px) scaleX(1); }
+  0%,8%      { transform: translateX(26px); }
+  17%,57%    { transform: translateX(196px); }
+  66%,100%   { transform: translateX(26px); }
+}
+@keyframes cw-eve-face {
+  0%,56.9%   { transform: scaleX(1); }
+  57%,66.4%  { transform: scaleX(-1); }
+  66.5%,100% { transform: scaleX(1); }
 }
 @keyframes cw-eve-idle    { 0%,7.9%{opacity:1} 8%,66.4%{opacity:0} 66.5%,100%{opacity:1} }
 @keyframes cw-eve-walk    { 0%,7.9%{opacity:0} 8%,17%{opacity:1} 17.1%,56.9%{opacity:0} 57%,66%{opacity:1} 66.1%,100%{opacity:0} }
@@ -565,18 +625,21 @@ const CSS = `
 /* ========================= MORNING (26s) =========================
    Wakes and stretches, walks over for coffee, sips, wanders back.  */
 [data-activity="morning"] .cw-actor     { animation: cw-mor-move 26s linear infinite; }
+[data-activity="morning"] .cw-flip      { animation: cw-mor-face 26s steps(1) infinite; }
 [data-activity="morning"] .cw-s-stretch { animation: cw-mor-stretch 26s steps(1) infinite; }
 [data-activity="morning"] .cw-s-walk    { animation: cw-mor-walk 26s steps(1) infinite; }
 [data-activity="morning"] .cw-s-coffee  { animation: cw-mor-coffee 26s steps(1) infinite; }
 [data-activity="morning"] .cw-s-idle    { animation: cw-mor-idle 26s steps(1) infinite; }
 
 @keyframes cw-mor-move {
-  0%,25.5% { transform: translateX(26px) scaleX(1); }
-  36%      { transform: translateX(168px) scaleX(1); }
-  76.5%    { transform: translateX(168px) scaleX(1); }
-  77%      { transform: translateX(168px) scaleX(-1); }
-  87%      { transform: translateX(26px) scaleX(-1); }
-  87.5%,100% { transform: translateX(26px) scaleX(1); }
+  0%,25.5%   { transform: translateX(26px); }
+  36%,77%    { transform: translateX(168px); }
+  87%,100%   { transform: translateX(26px); }
+}
+@keyframes cw-mor-face {
+  0%,76.9%   { transform: scaleX(1); }
+  77%,87.4%  { transform: scaleX(-1); }
+  87.5%,100% { transform: scaleX(1); }
 }
 @keyframes cw-mor-stretch { 0%,1.9%{opacity:0} 2%,24%{opacity:1} 24.1%,100%{opacity:0} }
 @keyframes cw-mor-walk    { 0%,25.4%{opacity:0} 25.5%,36%{opacity:1} 36.1%,76.9%{opacity:0} 77%,87%{opacity:1} 87.1%,100%{opacity:0} }
@@ -591,9 +654,8 @@ const CSS = `
 [data-activity="bedtime"] .cw-s-yawn { animation: cw-bed-yawn 20s steps(1) infinite; }
 
 @keyframes cw-bed-move {
-  0%,12%   { transform: translateX(30px) scaleX(1); }
-  32%      { transform: translateX(150px) scaleX(1); }
-  100%     { transform: translateX(150px) scaleX(1); }
+  0%,12%   { transform: translateX(30px); }
+  32%,100% { transform: translateX(150px); }
 }
 @keyframes cw-bed-idle { 0%,11.9%{opacity:1} 12%,100%{opacity:0} }
 @keyframes cw-bed-walk { 0%,11.9%{opacity:0} 12%,32%{opacity:1} 32.1%,100%{opacity:0} }

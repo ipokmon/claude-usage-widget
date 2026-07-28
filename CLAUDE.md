@@ -81,10 +81,31 @@ Every sprite state stays mounted and keeps cycling; the per-activity CSS
 timeline only cross-fades `opacity`. Mounting on demand would restart the fast
 walk and typing cycles from frame 0 each time a state appeared.
 
-Three nested elements, each owning one thing: `.cw-actor` traverses
-(`translateX`) and faces (`scaleX`), `.cw-sprite` fades, `.cw-film` runs the
-frame cycle. Collapsing these makes the transforms and the `animation`
-shorthand collide.
+Four nested elements, each owning exactly one thing: `.cw-actor` traverses
+(`translateX`) **and carries the cast shadow**, `.cw-flip` faces (`scaleX`),
+`.cw-sprite` fades, `.cw-film` runs the frame cycle. Collapsing these makes the
+transforms and the `animation` shorthand collide.
+
+**`.cw-flip` exists specifically so the shadow is not mirrored.** CSS applies
+`filter` *before* `transform`, so if the element carrying the drop-shadow also
+carried the `scaleX(-1)`, the shadow would flip with the character and light it
+from the wrong side for the whole return walk. Keeping the flip one level in
+makes the shadow correct by construction rather than by sign-juggling in the
+keyframes.
+
+## Lighting
+
+One dominant light per theme: the window (x≈120) by day, the fire (x≈277) after
+dark. Props throw away from it via per-prop `drop-shadow` filters, hand-set
+rather than computed — there are only a handful, and eyeballing beats a formula
+at this scale. The ceiling string is deliberately excluded.
+
+The character's shadow flips as it walks past the window, so `cw-*-shadow`
+keyframes exist for the three activities that occur in the light theme
+(morning, day, evening). The flip points are where the character's centre
+(`translateX + 28`) crosses x=120, solved along each walk segment — if you
+retime a walk, recompute them. After dark the character is always left of the
+fire, so the dark theme just uses one static filter.
 
 Card height is deliberately **not** fixed. It adapts to however many metrics the
 payload returns — pinning it leaves a dead band when a metric is unmapped.

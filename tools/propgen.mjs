@@ -407,9 +407,12 @@ const BUILD = {
   rug: rug(),                                        // has its own shadow row
   fireplace: withContactShadow(fireplace()),         // bottom -2
   lamp: withContactShadow(lamp()),                   // bottom -2
-  shelf: withDropShadow(shelf()),                    // bottom -2
-  windowDay: withDropShadow(windowPane(false)),      // bottom -2
-  windowNight: withDropShadow(windowPane(true)),     // bottom -2
+  // No baked drop shadow on the wall props: their cast shadow is now a
+  // directional CSS filter that follows the room's light, and a second baked
+  // one pointing a fixed way would fight it.
+  shelf: shelf(),
+  windowDay: windowPane(false),
+  windowNight: windowPane(true),
   armchair: withContactShadow(outline(armchair())),  // bottom -2
   plant: withContactShadow(outline(plant())),        // bottom -2
 };
