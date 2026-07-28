@@ -216,20 +216,24 @@ function windowPane(night) {
 
 /*
  * Seen side-on there is no perspective to work with, so a thick rug just reads
- * as a floating lozenge. Drawn instead as a wide, thin band that sits directly
- * under the floor line, with fringe at each end to say "rug" rather than
- * "shape".
+ * as a floating lozenge. Drawn instead as a wide, thin band lying on the floor
+ * plane, with fringe at each end to say "rug" rather than "shape".
+ *
+ * Terracotta rather than the muted taupe this started as: against the warm
+ * wood floor the muted version disappeared. It only needed toning down back
+ * when it sat against the wall.
  */
 function rug() {
   const W = 112;
-  const img = mk(W, 4);
-  rect(img, 3, 0, W - 6, 1, C.U);
-  rect(img, 2, 1, W - 4, 1, C.u);
-  rect(img, 3, 2, W - 6, 1, C.U);
-  rect(img, 5, 3, W - 10, 1, C.u);
-  for (let x = 14; x < W - 14; x += 12) rect(img, x, 1, 4, 1, C.c);  // pattern
+  const img = mk(W, 5);
+  rect(img, 3, 0, W - 6, 1, C.P);
+  rect(img, 2, 1, W - 4, 1, C.p);
+  rect(img, 2, 2, W - 4, 1, C.P);
+  rect(img, 3, 3, W - 6, 1, C.p);
+  rect(img, 5, 4, W - 10, 1, C.k);                                    // contact shadow
+  for (let x = 12; x < W - 12; x += 14) rect(img, x, 2, 5, 1, C.c);   // pattern
   for (let x = 0; x < 3; x++) {                                       // fringe
-    px(img, x, 1, C.u); px(img, W - 1 - x, 1, C.u);
+    px(img, x, 2, C.P); px(img, W - 1 - x, 2, C.P);
   }
   return img;
 }

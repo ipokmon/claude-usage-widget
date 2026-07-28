@@ -116,7 +116,7 @@ const METRIC_ORDER = ["session", "weekly", "weekly_fable"];
 
 /* PROPS:BEGIN */
 const PROPS = {
-  rug: { w: 112, h: 4, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAAAECAYAAABWU7ucAAAAOklEQVR42mNgQAKbpnX9H8WDHyPHGcO0qoL/5OBPz++g4FH1lKknFzOM5sAhngOxAVqlllFMxdwGBQCj/Y1HfKVLWQAAAABJRU5ErkJggg==" },
+  rug: { w: 112, h: 5, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAAAFCAYAAACdD2g5AAAAQElEQVR42mNgQALn6pL+j+LBjxmwga2p3v9H8dDBZOe6T8/vYOBRffTXhzU3jqbsIZb7cAErLaX/o3jwYWxxBQALPgYpg3ZDlQAAAABJRU5ErkJggg==" },
   lamp: { w: 14, h: 36, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAkCAYAAAC5fwuBAAAAWUlEQVR42mNgQANWWkr/sWEGfACk4NPzO1gxXs1kacSnCa9msjQSowmrZrI0gjVdaCEJ4w3hVTUh/3tS3PDH36jGUY2jGkc1jmokCECKsWGC9SM+TH2NpAAAEa+NTmJC2o0AAAAASUVORK5CYII=" },
   shelf: { w: 30, h: 15, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAPCAYAAADzun+cAAAAhUlEQVR42mNgGArASkvpPzKmm6FbU73/I2NyzMaQ3FSR9B8ZYzPg0/M7/5ExQUOxmE2Wodh8PK0s4T8M47IY3VyCPu6aMu8/DOOyGJ9jYQ7G62NsFqMbSoyPkR0LczDJFhPjY3SLsUUZXSweMB+PWozT4lU1If8HAjP0pLj9HwiMkeHphQGOiabHkUz+KwAAAABJRU5ErkJggg==" },
   windowDay: { w: 32, h: 26, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAYAAADWm14/AAAAb0lEQVR42mPoSXH7P5CYAURYaSkNCEZxwLz9N0jGMF+Qo3f4OuDThRasmC4OwGU5NkeMOmB4OoCiRFi36AjJGOYAcvQOPgfQuw4YfA5AD6JPz+8QxDRNA6MOGHnZcNQBow4YMAesqgn5P5B4wB0AAKVxxxD3k34pAAAAAElFTkSuQmCC" },
@@ -285,11 +285,11 @@ export const render = ({ output }) => {
 
         {/* ---- character stage: kept visually separate from the data ---- */}
         <div className="cw-stage">
+          <div className="cw-floor" />
           <div className="cw-scene">
             <Scenery />
             <Actor />
           </div>
-          <div className="cw-floor" />
         </div>
 
         <footer className="cw-footer">
@@ -314,25 +314,31 @@ const CSS = `
 .cw-root { --coral:#CC785C; --coral-dim:#B5654B; --cream:#F2E7DC; }
 
 .cw-root[data-theme="light"] {
-  --card-bg: rgba(255,255,255,0.60);
-  --card-brd: rgba(255,255,255,0.75);
+  --card-bg: rgba(222,220,227,0.68);
+  --card-brd: rgba(255,255,255,0.60);
   --text: #1D1D1F;
   --text-2: rgba(60,60,67,0.62);
   --track: rgba(60,60,67,0.13);
+  /* wall */
   --stage-a: rgba(255,236,220,0.55);
   --stage-b: rgba(214,228,246,0.40);
-  --prop-dark: #7C6152; --prop-mid: #A98871; --prop-screen: #CBD9E6;
+  /* floor: warm wood, clearly darker than the wall so the room has a ground */
+  --floor-a: rgba(198,168,142,0.62);
+  --floor-b: rgba(172,142,118,0.72);
+  --floor-edge: rgba(116,88,66,0.30);
   --shadow: 0 8px 28px rgba(0,0,0,0.16);
 }
 .cw-root[data-theme="dark"] {
-  --card-bg: rgba(28,28,30,0.52);
+  --card-bg: rgba(18,18,21,0.66);
   --card-brd: rgba(255,255,255,0.12);
   --text: #F5F5F7;
   --text-2: rgba(235,235,245,0.60);
   --track: rgba(235,235,245,0.16);
   --stage-a: rgba(24,26,48,0.60);
   --stage-b: rgba(46,32,44,0.50);
-  --prop-dark: #4A3B33; --prop-mid: #6B5548; --prop-screen: #3E5166;
+  --floor-a: rgba(44,34,38,0.74);
+  --floor-b: rgba(26,20,24,0.82);
+  --floor-edge: rgba(255,255,255,0.09);
   --shadow: 0 8px 30px rgba(0,0,0,0.42);
 }
 
@@ -406,10 +412,15 @@ const CSS = `
   height: 92px; overflow: hidden;
   background: linear-gradient(160deg, var(--stage-a), var(--stage-b));
 }
-.cw-scene { position: absolute; inset: 0; }
+.cw-scene { position: absolute; inset: 0; z-index: 1; }
+/* The floor is a filled plane rather than a hairline, so the stage reads as a
+   room with a ground instead of one flat wash. It has to paint BEHIND the
+   scenery: the rug tucks under the floor line and would be covered otherwise. */
 .cw-floor {
-  position: absolute; left: 0; right: 0; bottom: 21px; height: 1px;
-  background: currentColor; opacity: 0.10;
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 0;
+  height: 21px; box-sizing: border-box;
+  background: linear-gradient(180deg, var(--floor-a), var(--floor-b));
+  border-top: 1px solid var(--floor-edge);
 }
 
 /* ---- scenery ----
@@ -427,9 +438,9 @@ const CSS = `
 .cw-prop-windowDay,
 .cw-prop-windowNight { left: 264px; bottom: 36px; }
 .cw-prop-plant       { left: 320px; bottom: 21px; }
-/* the rug lies flat, so it hangs just below the floor line rather than
-   standing on it like everything else */
-.cw-prop-rug         { left: 96px;  bottom: 17px; }
+/* the rug lies flat ON the floor plane, so it sits well below the floor line
+   that everything else stands on */
+.cw-prop-rug         { left: 96px;  bottom: 11px; }
 
 /* one window at a time, following the theme rather than the activity, so it
    agrees with the card around it */

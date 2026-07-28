@@ -248,8 +248,25 @@ Two things that bit during authoring, worth knowing before you edit the props:
   outline; without one it vanished into the pale stage and only its top edge
   showed.
 - **Seen side-on there is no perspective**, so a thick rug reads as a floating
-  lozenge. It works as a wide, thin band tucked just under the floor line —
-  which is why `.cw-prop-rug` is the one prop whose `bottom` is *below* 21px.
+  lozenge. It works as a wide, thin band lying on the floor plane — which is
+  why `.cw-prop-rug` is the one prop whose `bottom` is well *below* the 21px
+  line everything else stands on.
+- **A prop's colour depends on what it sits against.** The rug started muted,
+  because at the time it sat against the wall and anything saturated pulled the
+  eye. Once the floor became a wood-toned plane the muted version vanished into
+  it, and it had to go back to terracotta.
+
+### The stage is a wall and a floor
+
+`.cw-floor` is a filled plane (0–21px) with its own gradient and a 1px top
+edge, not the hairline it started as — otherwise the stage is one flat wash and
+the character looks like it's floating in a void. It paints **behind** the
+scenery, which is why it is the first child of `.cw-stage`: the rug lies on the
+floor and would be painted over if the order were reversed.
+
+Wall colour lives in `--stage-a/b`, floor in `--floor-a/b/--floor-edge`, per
+theme. They are deliberately separate variables — retinting the floor should
+never touch the wall.
 
 ## ⚠️ Known-fragile points
 
