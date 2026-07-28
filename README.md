@@ -233,9 +233,14 @@ pinned to `bottom: 19px` to put the feet on the line. Change one, change both.
 ## Scenery
 
 The stage also has background props — a string of lights across the top, a
-floor lamp, a rug, a wall shelf of books, a window, and a potted plant — so the
-character isn't standing in an empty void. They are decorative only and always
-sit behind the actor.
+floor lamp, a window, a wall shelf of books, an armchair on a rug, a lit stone
+fireplace, and a potted plant — so the character isn't standing in an empty
+void. They are decorative only and always sit behind the actor.
+
+Left to right the room reads: lamp, the character's working area, window,
+shelf, armchair on the rug, fireplace, plant. The fireplace claims the right
+side, which is why the window and rug sit further left than the space would
+otherwise suggest.
 
 ```bash
 node tools/propgen.mjs
@@ -253,6 +258,10 @@ around it: blue sky and sun in light, stars and a moon in dark. The lamp's warm
 spill is a CSS radial gradient shown only in the dark theme, and the string
 lights pick up a `drop-shadow` halo the same way — both cheaper than authoring
 second, lit variants of the artwork.
+
+The fire's glow is the one light that burns in **both** themes, just stronger
+after dark. The lamp and the string lights are switched off by day; a fire that
+went out at 07:00 would look broken rather than tasteful.
 
 The light string is a run of shallow arcs rather than one long sag: a single
 deep catenary dips into the character's headroom at mid-span.

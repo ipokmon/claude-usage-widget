@@ -118,10 +118,12 @@ const METRIC_ORDER = ["session", "weekly", "weekly_fable"];
 const PROPS = {
   lights: { w: 326, h: 16, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUYAAAAQCAYAAABqd9auAAAAvklEQVR42u3YzQ2CQBCA0a2FoyVYjoVwsj5DAd6904BGEvdG4s+A7PC+ZK6wL0wgoRwP3f05JVEvExcXF9dPrtaxc+fn4uLiCnnJt4L99JxcXFxcIefcGjbqPFxcXFzhF18LvMY9ubi4uBa7eeRX5p9fGy4uLq7F0e9OK/8luLi4uELxJWFcXFxcX8HG4VwnC3Ry3a51Mrku/alOqudlD+2hhbSQFtIe2sNG/iFwcXFx7dklSZIkSZIkSZK0qx7WJKw120g8OwAAAABJRU5ErkJggg==" },
   rug: { w: 112, h: 5, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAAAFCAYAAACdD2g5AAAAQElEQVR42mNgQALn6pL+j+LBjxmwga2p3v9H8dDBZOe6T8/vYOBRffTXhzU3jqbsIZb7cAErLaX/o3jwYWxxBQALPgYpg3ZDlQAAAABJRU5ErkJggg==" },
+  fireplace: { w: 46, h: 48, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAC4AAAAwCAYAAABuZUjcAAABDklEQVR42u3ZMQoCMRAF0BxCLCwtrWRLD2ApFhaWIpZbWFmIR/AkHsSzeAabaIqAhp24xskkH0f44MIuvM0Ov0jM5bSyiDHn3dwiBhc+m4wtYoz/uYvjvq06b2CFKzwBvl4uqk50xd0NKash8ZzCq4FDzzj1ppKhvkYSfDQYiuS/4LHZkoSz9XipFf+5DhWeCw4941qHCi8w47dDg9fjDu0DVYcQ8BD3iv4WL9bjXbhP8NiLiPV4iLtft2T6jJBIHXatLAQ8huwb8R7nQFPwrD3OBQ/x2esQEs59LCLW49ynC2I9nhvOWoeQG0KS+4Ox5/REoii89h1aKqb2VaaCC4c+WX7+2SAlbJUpQrz3AahWZWR8X51pAAAAAElFTkSuQmCC" },
   lamp: { w: 14, h: 38, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAmCAYAAAD0t6qKAAAAZElEQVR42mNgQANWWkr/sWEGfACk4NPzO1gxXs1kacSnCa9msjQSowmrZrI0gjVdaCEJ4w3hVTUh/3tS3PDH36jGUY2jGkc1jmokCECKsWGC9SM+TD2NQMEEUjC6ZgNiMAOlAABhBJ8ycWJs/AAAAABJRU5ErkJggg==" },
   shelf: { w: 31, h: 17, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAARCAYAAAAlpHdJAAAAl0lEQVR42mNgGCrASkvpPzKmq8FbU73/I2NyzMaqYFNF0n9kjE3Np+d3/iNjoGEOxIQEIXOJMhjd5yA108oS/sMwLsvRzSXoc5Cirinz/sMwLsvxORjmaHRzibIc3WBCPkd3MMzRZFmObAixlmOLPrpZju7zUcsHn+WrakL+DwQGW96T4vZ/IDDWMp2O2AHmAIeBwANqOQDDavc3P64BvgAAAABJRU5ErkJggg==" },
   windowDay: { w: 33, h: 28, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAcCAYAAADvANYcAAAAfUlEQVR42mPoSXH7P5CYAQRADCstpQHBGI6Yt/8GyRjmG3L0whwBpB2GpyM+XWjBiunmCFwOwOaQUUeMDEdQnDDrFh0hGcMcQY7ewesIetcZg9cR6MH16fkdgpjmaWLUEaNZdNQRo44YVI5YVRPyfyDx4HEECIAYA4kHhSMA+ykLLwP0TSEAAAAASUVORK5CYII=" },
   windowNight: { w: 33, h: 28, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAcCAYAAADvANYcAAAAhklEQVR42mPoSXH7P5CYAQRADCstpQHBGI4wsYkhGcN8Q45emCOAtMPQcsSbDz9IcgQ29XQLCZDl6JhsRxDyCTZHYHMALofQLCRGpiNABtM8TYzccoLedcbgdcSQTxPEFGwDmjCHbxZF9tnIbE+MOmLkOGJVTcj/gcSDxxEgAGIMJB4UjgAAw1bEqzWYp8UAAAAASUVORK5CYII=" },
+  armchair: { w: 30, h: 30, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAhklEQVR42mNgGLHASkvpPz5MM0vzmkrwYppYPqAWh6RF4cWjFg86i0nKGdSymJA5GGYMC4tJypLEWkwMpprFhAoWUvCoxUTFMbF4wCwmKVeMWjxqcUSAHxwTW4Kh6yGrcCfKEDTziNZDsevJtZiahlDFYvTQoLoeoIIEWmN8lhvQCg+aLhMAguPYRYSHP5cAAAAASUVORK5CYII=" },
   plant: { w: 18, h: 26, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAaCAYAAAC6nQw6AAAAlklEQVR42mNgwAGstJT+g3BOTwYYw/gMxAJ0A1qW1YExSQZiMwAdIxuI1xBcBmAzEMMwXIage42gYaS6hixXkWQIqYbhNYSYmCMYY/jSErorSEqU2FxHlgFUMQjmfFx5jegsQgomaNC5uiS8eAgaRIxhRKclqhu0NdUbK6a/QfgMI7sCoJpBJKdoqOYEcjAuwwxIwch6ATVqLpN0z/GeAAAAAElFTkSuQmCC" },
 };
 /* PROPS:END */
@@ -129,6 +131,7 @@ const PROPS = {
 const Scenery = () => (
   <div className="cw-scenery">
     <div className="cw-glow" />
+    <div className="cw-fireglow" />
     {Object.entries(PROPS).map(([name, p]) => (
       <div
         key={name}
@@ -450,15 +453,29 @@ const CSS = `
    the surface the prop actually rests on.
    NB: no backticks in this block - the whole stylesheet is a JS template
    literal, so one would terminate it and break the widget. */
+/* Layout, left to right: lamp, the character's working area, window, shelf,
+   armchair on the rug, fireplace, plant. The fireplace claims the right side,
+   which is why the window and rug moved left to make room for it. */
 .cw-prop-lights      { left: 12px;  bottom: 74px; }
-.cw-prop-lamp        { left: 8px;   bottom: 19px; }
-.cw-prop-shelf       { left: 150px; bottom: 58px; }
+.cw-prop-lamp        { left: 6px;   bottom: 19px; }
 .cw-prop-windowDay,
-.cw-prop-windowNight { left: 264px; bottom: 34px; }
-.cw-prop-plant       { left: 320px; bottom: 19px; }
+.cw-prop-windowNight { left: 104px; bottom: 34px; }
+.cw-prop-shelf       { left: 152px; bottom: 58px; }
+.cw-prop-armchair    { left: 196px; bottom: 19px; }
+.cw-prop-fireplace   { left: 254px; bottom: 19px; }
+.cw-prop-plant       { left: 316px; bottom: 19px; }
 /* the rug lies flat ON the floor plane, so it sits well below the floor line
-   that everything else stands on */
-.cw-prop-rug         { left: 96px;  bottom: 11px; }
+   that everything else stands on; the armchair sits on its right end */
+.cw-prop-rug         { left: 112px; bottom: 11px; }
+
+/* Firelight. Unlike the lamp this is lit in BOTH themes - the fire is burning
+   either way - just stronger after dark when there is less to compete with. */
+.cw-fireglow {
+  position: absolute; left: 232px; bottom: 14px;
+  width: 92px; height: 76px; opacity: 0.55;
+  background: radial-gradient(ellipse at 50% 55%, rgba(240,146,70,0.30), rgba(240,146,70,0) 70%);
+}
+[data-theme="dark"] .cw-fireglow { opacity: 1; }
 
 /* the bulbs pick up a warm halo after dark, same idea as the lamp spill */
 [data-theme="dark"] .cw-prop-lights {

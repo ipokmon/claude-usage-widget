@@ -81,6 +81,12 @@ const C = {
   m: [150, 118, 96],   // book spine C
   u: [150, 122, 112],  // rug, muted on purpose - a saturated rug pulls the eye
   U: [178, 150, 138],  // rug light
+  e: [88, 80, 78],     // stone dark
+  E: [122, 112, 108],  // stone light
+  f: [232, 118, 50],   // flame
+  F: [250, 198, 98],   // flame core
+  v: [84, 102, 90],    // armchair; muted green balances the terracotta and
+  V: [110, 130, 116],  // orange already in the room
 };
 
 const mk = (w, h) => ({ width: w, height: h, data: Buffer.alloc(w * h * 4) });
@@ -282,6 +288,61 @@ function lights() {
   return img;
 }
 
+/** Stone fireplace with a lit fire. The warm spill onto the room is CSS. */
+function fireplace() {
+  const W = 46, H = 46;
+  const img = mk(W, H);
+
+  rect(img, 2, 4, W - 4, H - 8, C.E);                 // surround
+  for (let y = 8; y < H - 8; y += 4) {                // mortar courses
+    rect(img, 2, y, W - 4, 1, C.e);
+    const off = ((y / 4) | 0) % 2 ? 7 : 0;            // stagger the joints
+    for (let x = 4 + off; x < W - 4; x += 14) rect(img, x, y + 1, 1, 3, C.e);
+  }
+  rect(img, 2, 4, 1, H - 8, C.k);                     // side edges
+  rect(img, W - 3, 4, 1, H - 8, C.k);
+
+  const fx = 10, fy = 14, fw = W - 20, fh = H - 22;
+  rect(img, fx - 1, fy - 1, fw + 2, fh + 2, C.k);     // firebox opening
+  rect(img, fx, fy, fw, fh, [26, 20, 22]);
+
+  const base = fy + fh - 4;
+  const flame = (cx, h) => {
+    for (let i = 0; i < h; i++) {
+      const half = Math.max(0, Math.round((h - i) / 2.4));
+      rect(img, cx - half, base - i, half * 2 + 1, 1, i < h * 0.5 ? C.F : C.f);
+    }
+  };
+  flame(17, 8); flame(23, 11); flame(29, 7);
+  rect(img, 13, base + 1, 20, 3, C.w);                // logs
+  rect(img, 13, base + 1, 20, 1, C.W);
+  rect(img, 12, base + 4, 22, 1, C.k);
+
+  rect(img, 0, 0, W, 3, C.w);                         // mantel
+  rect(img, 0, 0, W, 1, C.W);
+  rect(img, 0, 3, W, 1, C.k);
+  rect(img, 0, H - 4, W, 4, C.E);                     // hearth
+  rect(img, 0, H - 4, W, 1, C.e);
+  rect(img, 0, H - 1, W, 1, C.k);
+  return img;
+}
+
+/** Armchair, side view, facing right towards the fire. */
+function armchair() {
+  const W = 30, H = 28;
+  const img = mk(W, H);
+  rect(img, 2, 3, 8, 21, C.v);        // backrest
+  rect(img, 2, 3, 8, 2, C.V);         // lit top edge
+  rect(img, 8, 13, 18, 9, C.v);       // seat block
+  rect(img, 8, 13, 18, 3, C.V);       // cushion
+  rect(img, 10, 16, 14, 1, C.v);      // cushion seam
+  rect(img, 20, 9, 7, 8, C.V);        // near armrest
+  rect(img, 20, 9, 7, 2, C.v);
+  rect(img, 9, 22, 3, 4, C.e);        // legs
+  rect(img, 22, 22, 3, 4, C.e);
+  return img;
+}
+
 /** Window frame; `night` swaps the sky and the sun for a moon and stars. */
 function windowPane(night) {
   const img = mk(32, 26);
@@ -344,10 +405,12 @@ function rug() {
 const BUILD = {
   lights: lights(),                                  // hangs, so no shadow
   rug: rug(),                                        // has its own shadow row
+  fireplace: withContactShadow(fireplace()),         // bottom -2
   lamp: withContactShadow(lamp()),                   // bottom -2
   shelf: withDropShadow(shelf()),                    // bottom -2
   windowDay: withDropShadow(windowPane(false)),      // bottom -2
   windowNight: withDropShadow(windowPane(true)),     // bottom -2
+  armchair: withContactShadow(outline(armchair())),  // bottom -2
   plant: withContactShadow(outline(plant())),        // bottom -2
 };
 
