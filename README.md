@@ -1,22 +1,24 @@
 # Claude Usage — animated desktop widget
 
-An Übersicht desktop widget showing your Claude.ai plan usage limits (5-hour,
-weekly all-models, weekly Fable), with a small original character whose activity
-follows the time of day.
+An Übersicht desktop widget showing your Claude.ai plan usage limits, with a
+pixel-art character whose activity follows the time of day.
 
 ```
 ┌─────────────────────────────────┐
 │  Claude Usage            ● stale│
 │  5-hour limit   resets in 2h 24m│  42%
-│  Weekly (all models)            │  73%
-│  Weekly (Fable)                 │  94%
+│  Weekly (all models)            │  13%
 │ ┌─────────────────────────────┐ │
-│ │  🖥   ╭─╮                    │ │  <- character stage
-│ │ ═════ ╰─╯ ══════════════════│ │
+│ │  ╻    ╭─╮      ▤        ⬛  ♣ │ │  <- character stage
+│ │ ═╹════╰─╯══▬▬▬══════════════ │ │
 │ └─────────────────────────────┘ │
 │  working            synced · 4m │
 └─────────────────────────────────┘
 ```
+
+**It renders two bars, not three.** The 5-hour and weekly-all-models limits are
+the only ones this account's payload actually populates — see
+[Known-fragile points](#️-known-fragile-points).
 
 ## Why Übersicht and not a native widget
 
@@ -218,6 +220,37 @@ Alignment depends on two numbers agreeing: `spritegen` leaves 2px under the feet
 inside the 56px frame box, and `.cw-floor` sits at 21px, so `.cw-actor` is
 pinned to `bottom: 19px` to put the feet on the line. Change one, change both.
 
+## Scenery
+
+The stage also has background props — a floor lamp, a rug, a wall shelf of
+books, a window, and a potted plant — so the character isn't standing in an
+empty void. They are decorative only and always sit behind the actor.
+
+```bash
+node tools/propgen.mjs
+```
+
+These are hand-authored in code rather than generated, because they are small
+regular shapes that are quicker to draw than to generate and then clean up. The
+plant is an ASCII grid (organic outline); everything else is composed from
+rectangles. All of it is drawn at the same 1-art-pixel-per-output-pixel scale as
+the character, which is what keeps the stage looking like one set. Total cost is
+under 1 KB.
+
+The window follows the **theme**, not the activity, so it agrees with the card
+around it: blue sky and sun in light, stars and a moon in dark. The lamp's warm
+spill is a CSS radial gradient shown only in the dark theme, which is cheaper
+than authoring a second lit-shade sprite.
+
+Two things that bit during authoring, worth knowing before you edit the props:
+
+- **Cream on the light theme is invisible.** The lamp shade needed a dark
+  outline; without one it vanished into the pale stage and only its top edge
+  showed.
+- **Seen side-on there is no perspective**, so a thick rug reads as a floating
+  lozenge. It works as a wide, thin band tucked just under the floor line —
+  which is why `.cw-prop-rug` is the one prop whose `bottom` is *below* 21px.
+
 ## ⚠️ Known-fragile points
 
 Read this before filing a bug against yourself.
@@ -243,9 +276,11 @@ Read this before filing a bug against yourself.
 
 ```
 widget/claude-usage.jsx    the widget: layout, state machine, sprites, all CSS
-tools/spritegen.mjs        sprite pipeline; rewrites the SPRITES block in the widget
+tools/spritegen.mjs        character pipeline; rewrites the SPRITES block in the widget
+tools/propgen.mjs          scenery pipeline; rewrites the PROPS block in the widget
 sprite/*.png               source sheets (2x2 poses each)
 sprite/out/                generated strips + manifest
+sprite/out/props/          generated scenery
 poller/poll.mjs            primary scraper; degrades gracefully, always exits 0
 poller/probe.mjs           dev/repair tool: dump response, suggest field paths
 poller/manual-entry.mjs    fallback; self-contained, no network, no shared code

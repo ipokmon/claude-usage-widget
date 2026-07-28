@@ -107,6 +107,42 @@ function levelFor(pct) {
 const METRIC_ORDER = ["session", "weekly", "weekly_fable"];
 
 // ---------------------------------------------------------------------------
+// Scenery
+//
+// Hand-authored pixel art from tools/propgen.mjs, drawn at the same scale as
+// the character so the stage reads as one set. Purely decorative and always
+// behind the actor. Regenerate with:  node tools/propgen.mjs
+// ---------------------------------------------------------------------------
+
+/* PROPS:BEGIN */
+const PROPS = {
+  rug: { w: 112, h: 4, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAAAECAYAAABWU7ucAAAAOklEQVR42mNgQAKbpnX9H8WDHyPHGcO0qoL/5OBPz++g4FH1lKknFzOM5sAhngOxAVqlllFMxdwGBQCj/Y1HfKVLWQAAAABJRU5ErkJggg==" },
+  lamp: { w: 14, h: 36, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAkCAYAAAC5fwuBAAAAWUlEQVR42mNgQANWWkr/sWEGfACk4NPzO1gxXs1kacSnCa9msjQSowmrZrI0gjVdaCEJ4w3hVTUh/3tS3PDH36jGUY2jGkc1jmokCECKsWGC9SM+TH2NpAAAEa+NTmJC2o0AAAAASUVORK5CYII=" },
+  shelf: { w: 30, h: 15, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAPCAYAAADzun+cAAAAhUlEQVR42mNgGArASkvpPzKmm6FbU73/I2NyzMaQ3FSR9B8ZYzPg0/M7/5ExQUOxmE2Wodh8PK0s4T8M47IY3VyCPu6aMu8/DOOyGJ9jYQ7G62NsFqMbSoyPkR0LczDJFhPjY3SLsUUZXSweMB+PWozT4lU1If8HAjP0pLj9HwiMkeHphQGOiabHkUz+KwAAAABJRU5ErkJggg==" },
+  windowDay: { w: 32, h: 26, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAYAAADWm14/AAAAb0lEQVR42mPoSXH7P5CYAURYaSkNCEZxwLz9N0jGMF+Qo3f4OuDThRasmC4OwGU5NkeMOmB4OoCiRFi36AjJGOYAcvQOPgfQuw4YfA5AD6JPz+8QxDRNA6MOGHnZcNQBow4YMAesqgn5P5B4wB0AAKVxxxD3k34pAAAAAElFTkSuQmCC" },
+  windowNight: { w: 32, h: 26, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAYAAADWm14/AAAAd0lEQVR42mPoSXH7P5CYAURYaSkNCEZxgIlNDMkY5gty9A49B7z58IMkB2BTT5cQAFmMjslyACEfYHMANstxOYImITCyHAAylKZpYOSVA/SuAwafA4Z0GiCm0BqwRDj8siGyj0ZWe2DUAcPXAatqQv4PJB5wBwAAOkeAmzrwllcAAAAASUVORK5CYII=" },
+  plant: { w: 18, h: 24, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAYCAYAAAD3Va0xAAAAd0lEQVR42mNgIAByejL+gzADuQBmQMuyOjAm2UB0A9AxUQbiMwCbgUQbgu41ogwjxTVkuYpkQ0gxjOjYwxVzZKcp9MBmoARQnLIHj0FWWkr/icFEGXSuLgkvHqIGETKMaEOobtDWVG+seGAMwmUYyYZQ3SBSUjQAX1m+PO8ohiwAAAAASUVORK5CYII=" },
+};
+/* PROPS:END */
+
+const Scenery = () => (
+  <div className="cw-scenery">
+    <div className="cw-glow" />
+    {Object.entries(PROPS).map(([name, p]) => (
+      <div
+        key={name}
+        className={`cw-prop cw-prop-${name}`}
+        style={{
+          backgroundImage: `url(${p.src})`,
+          width: `${p.w}px`,
+          height: `${p.h}px`,
+        }}
+      />
+    ))}
+  </div>
+);
+
+// ---------------------------------------------------------------------------
 // Character sprites
 //
 // Pixel-art strips built from sprite/*.png by tools/spritegen.mjs and inlined
@@ -250,6 +286,7 @@ export const render = ({ output }) => {
         {/* ---- character stage: kept visually separate from the data ---- */}
         <div className="cw-stage">
           <div className="cw-scene">
+            <Scenery />
             <Actor />
           </div>
           <div className="cw-floor" />
@@ -375,12 +412,47 @@ const CSS = `
   background: currentColor; opacity: 0.10;
 }
 
+/* ---- scenery ----
+   Decorative only, and always behind .cw-actor. Positions are tuned so the
+   middle of the stage stays clear: the character traverses x=26..250 and
+   passes in front of everything here.                                      */
+.cw-scenery { position: absolute; inset: 0; z-index: 0; }
+.cw-prop {
+  position: absolute;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+.cw-prop-lamp        { left: 8px;   bottom: 21px; }
+.cw-prop-shelf       { left: 150px; bottom: 60px; }
+.cw-prop-windowDay,
+.cw-prop-windowNight { left: 264px; bottom: 36px; }
+.cw-prop-plant       { left: 320px; bottom: 21px; }
+/* the rug lies flat, so it hangs just below the floor line rather than
+   standing on it like everything else */
+.cw-prop-rug         { left: 96px;  bottom: 17px; }
+
+/* one window at a time, following the theme rather than the activity, so it
+   agrees with the card around it */
+.cw-prop-windowNight { opacity: 0; }
+[data-theme="dark"] .cw-prop-windowDay   { opacity: 0; }
+[data-theme="dark"] .cw-prop-windowNight { opacity: 1; }
+
+/* Warm spill from the lamp, lit only in the dark theme. Cheap way to make the
+   night scene feel occupied without drawing a second lit-shade sprite. */
+.cw-glow {
+  /* centred on the lamp shade, which sits at x≈15, y≈53 above the floor */
+  position: absolute; left: -21px; bottom: 26px;
+  width: 72px; height: 60px; opacity: 0;
+  background: radial-gradient(ellipse at 50% 48%, rgba(242,208,132,0.22), rgba(242,208,132,0) 70%);
+}
+[data-theme="dark"] .cw-glow { opacity: 1; }
+
 /* ---- sprite actor ----
    .cw-actor  walks the width of the stage (translateX) and faces left/right
               (scaleX). .cw-sprite fades a state in or out. .cw-film runs the
               frame cycle. Three levels so the transforms never fight.        */
 .cw-actor {
-  position: absolute; left: 0;
+  position: absolute; left: 0; z-index: 1;
   /* spritegen leaves 2px of padding under the feet inside the 56px box, and
      .cw-floor sits at 21px, so 19px puts the feet exactly on the line */
   bottom: 19px;

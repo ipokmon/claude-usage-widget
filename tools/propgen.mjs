@@ -1,0 +1,274 @@
+#!/usr/bin/env node
+/**
+ * propgen.mjs - hand-authored pixel-art scenery for the widget's stage.
+ *
+ * The character sprites come from AI-generated sheets via spritegen.mjs; the
+ * background props are authored here instead, because they are small, regular
+ * shapes that are easier to draw in code than to generate and then clean up.
+ * Both end up as inlined data URIs at the same 1-art-pixel-per-output-pixel
+ * scale, which is what keeps them looking like one set.
+ *
+ * Run:  node tools/propgen.mjs
+ * It rewrites the PROPS block in widget/claude-usage.jsx in place.
+ */
+
+import zlib from 'node:zlib';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const OUT = join(HERE, '..', 'sprite', 'out', 'props');
+
+/* ------------------------------------------------------------- PNG encoder */
+
+const CRC_TABLE = (() => {
+  const t = new Int32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c;
+  }
+  return t;
+})();
+const crc32 = (buf) => {
+  let c = -1;
+  for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ -1) >>> 0;
+};
+const chunk = (type, data) => {
+  const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+  const td = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+  const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(td));
+  return Buffer.concat([len, td, crc]);
+};
+function encodePNG({ width, height, data }) {
+  const stride = width * 4;
+  const raw = Buffer.alloc((stride + 1) * height);
+  for (let y = 0; y < height; y++) {
+    raw[y * (stride + 1)] = 0;
+    data.copy(raw, y * (stride + 1) + 1, y * stride, (y + 1) * stride);
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0); ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8; ihdr[9] = 6;
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', zlib.deflateSync(raw, { level: 9 })),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+}
+
+/* ------------------------------------------------------------ drawing API */
+
+const C = {
+  k: [58, 42, 34],     // outline / dark wood
+  w: [140, 100, 70],   // wood mid
+  W: [170, 124, 84],   // wood light
+  g: [108, 140, 104],  // leaf
+  G: [132, 166, 126],  // leaf highlight
+  p: [181, 101, 75],   // terracotta (matches --coral-dim)
+  P: [206, 126, 98],   // terracotta light
+  c: [242, 231, 220],  // cream
+  y: [242, 208, 132],  // warm light / sun
+  b: [126, 162, 196],  // day sky
+  B: [158, 191, 216],  // day sky light
+  n: [52, 60, 92],     // night sky
+  s: [236, 240, 248],  // moon / star
+  r: [178, 120, 98],   // book spine A
+  R: [138, 148, 158],  // book spine B
+  m: [150, 118, 96],   // book spine C
+  u: [150, 122, 112],  // rug, muted on purpose - a saturated rug pulls the eye
+  U: [178, 150, 138],  // rug light
+};
+
+const mk = (w, h) => ({ width: w, height: h, data: Buffer.alloc(w * h * 4) });
+
+function px(img, x, y, c) {
+  if (x < 0 || y < 0 || x >= img.width || y >= img.height || !c) return;
+  const i = (y * img.width + x) * 4;
+  img.data[i] = c[0]; img.data[i + 1] = c[1]; img.data[i + 2] = c[2]; img.data[i + 3] = 255;
+}
+function rect(img, x, y, w, h, c) {
+  for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) px(img, xx, yy, c);
+}
+
+/** ASCII grid -> image. Validates row lengths so a typo fails loudly. */
+function fromAscii(rows) {
+  const w = rows[0].length;
+  rows.forEach((r, i) => {
+    if (r.length !== w) throw new Error(`ascii row ${i} is ${r.length}, expected ${w}`);
+  });
+  const img = mk(w, rows.length);
+  rows.forEach((row, y) => {
+    [...row].forEach((ch, x) => {
+      if (ch !== '.') {
+        if (!C[ch]) throw new Error(`unknown colour key "${ch}" at ${x},${y}`);
+        px(img, x, y, C[ch]);
+      }
+    });
+  });
+  return img;
+}
+
+/* ----------------------------------------------------------------- props */
+
+// Organic shape, so authored as a grid rather than rectangles. Sized to about
+// half the character's height so it actually registers at 1x.
+const plant = () => fromAscii([
+  '........gg........',
+  '......ggGGgg......',
+  '....ggGGGGGGgg....',
+  '...gGGGGGGGGGGg...',
+  '..gGGGGgGGgGGGGg..',
+  '..gGGGGGGGGGGGGg..',
+  '...gGGGGGGGGGGg...',
+  '....gGGGGGGGGg....',
+  '.....ggGGGGgg.....',
+  '.......gGGg.......',
+  '........gg........',
+  '........gg........',
+  '........gg........',
+  '....kkkkkkkkkk....',
+  '....kPPPPPPPPk....',
+  '....kPPPPPPPPk....',
+  '....kPPPPPPPPk....',
+  '.....kPPPPPPk.....',
+  '.....kPPPPPPk.....',
+  '.....kppppppk.....',
+  '.....kppppppk.....',
+  '......kppppk......',
+  '......kppppk......',
+  '......kkkkkk......',
+]);
+
+/** Floor lamp. The shade stays cream; the warm spill at night is CSS. */
+function lamp() {
+  const img = mk(14, 36);
+  // Shade: cream trapezoid, but outlined - unoutlined cream is invisible
+  // against the light theme's pale stage.
+  for (let y = 0; y < 8; y++) {
+    const half = 3 + Math.round((y / 7) * 4);
+    const x0 = 7 - half, w = half * 2;
+    rect(img, x0, y, w, 1, y === 7 ? C.y : C.c);
+    px(img, x0, y, C.k);
+    px(img, x0 + w - 1, y, C.k);
+  }
+  rect(img, 4, 0, 6, 1, C.k);             // top cap
+  rect(img, 6, 8, 2, 24, C.w);            // pole
+  rect(img, 6, 8, 1, 24, C.W);
+  rect(img, 4, 32, 6, 1, C.w);            // base
+  rect(img, 3, 33, 8, 2, C.k);
+  return img;
+}
+
+// A plank with books of varying height leaning on it.
+function shelf() {
+  const img = mk(30, 15);
+  const books = [
+    { x: 2, w: 4, h: 10, c: C.r },
+    { x: 7, w: 3, h: 8, c: C.R },
+    { x: 11, w: 4, h: 11, c: C.p },
+    { x: 16, w: 3, h: 9, c: C.m },
+    { x: 20, w: 4, h: 7, c: C.R },
+    { x: 25, w: 3, h: 10, c: C.r },
+  ];
+  for (const b of books) {
+    const top = 12 - b.h;
+    rect(img, b.x, top, b.w, b.h, b.c);
+    rect(img, b.x, top, b.w, 1, C.k);          // dark top edge
+    rect(img, b.x, top + 2, b.w, 1, C.c);      // title band
+  }
+  rect(img, 0, 12, 30, 2, C.w);                 // plank
+  rect(img, 0, 12, 30, 1, C.W);                 // lit top of plank
+  rect(img, 0, 14, 30, 1, C.k);                 // shadow under plank
+  return img;
+}
+
+/** Window frame; `night` swaps the sky and the sun for a moon and stars. */
+function windowPane(night) {
+  const img = mk(32, 26);
+  rect(img, 0, 0, 32, 26, C.w);                 // frame
+  rect(img, 1, 1, 30, 24, C.k);                 // inner shadow line
+  rect(img, 2, 2, 28, 22, night ? C.n : C.b);   // sky
+  if (night) {
+    rect(img, 20, 5, 5, 5, C.s);                // moon
+    rect(img, 19, 6, 1, 3, C.s);
+    rect(img, 25, 6, 1, 3, C.s);
+    rect(img, 22, 4, 1, 1, C.s);
+    for (const [sx, sy] of [[6, 6], [10, 4], [14, 9], [7, 13], [17, 15], [12, 18], [24, 16]]) {
+      px(img, sx, sy, C.s);
+    }
+  } else {
+    rect(img, 2, 2, 28, 8, C.B);                // brighter band near the top
+    rect(img, 20, 4, 6, 6, C.y);                // sun
+    rect(img, 19, 5, 1, 4, C.y);
+    rect(img, 26, 5, 1, 4, C.y);
+    rect(img, 6, 14, 9, 3, C.c);                // cloud
+    rect(img, 8, 12, 5, 2, C.c);
+  }
+  rect(img, 15, 2, 2, 22, C.w);                 // mullions
+  rect(img, 2, 12, 28, 2, C.w);
+  rect(img, 0, 24, 32, 2, C.W);                 // sill
+  return img;
+}
+
+/*
+ * Seen side-on there is no perspective to work with, so a thick rug just reads
+ * as a floating lozenge. Drawn instead as a wide, thin band that sits directly
+ * under the floor line, with fringe at each end to say "rug" rather than
+ * "shape".
+ */
+function rug() {
+  const W = 112;
+  const img = mk(W, 4);
+  rect(img, 3, 0, W - 6, 1, C.U);
+  rect(img, 2, 1, W - 4, 1, C.u);
+  rect(img, 3, 2, W - 6, 1, C.U);
+  rect(img, 5, 3, W - 10, 1, C.u);
+  for (let x = 14; x < W - 14; x += 12) rect(img, x, 1, 4, 1, C.c);  // pattern
+  for (let x = 0; x < 3; x++) {                                       // fringe
+    px(img, x, 1, C.u); px(img, W - 1 - x, 1, C.u);
+  }
+  return img;
+}
+
+const BUILD = {
+  rug: rug(),
+  lamp: lamp(),
+  shelf: shelf(),
+  windowDay: windowPane(false),
+  windowNight: windowPane(true),
+  plant: plant(),
+};
+
+/* ------------------------------------------------------ write + inject */
+
+mkdirSync(OUT, { recursive: true });
+const uris = {};
+let total = 0;
+for (const [name, img] of Object.entries(BUILD)) {
+  const png = encodePNG(img);
+  writeFileSync(join(OUT, `${name}.png`), png);
+  uris[name] = { w: img.width, h: img.height, src: `data:image/png;base64,${png.toString('base64')}` };
+  total += png.length;
+  console.log(`${name.padEnd(12)} ${img.width}x${img.height}  ${png.length} bytes`);
+}
+console.log(`\ntotal ${total} bytes raw, ~${Math.round((total * 4) / 3)} bytes base64`);
+
+const WIDGET = join(HERE, '..', 'widget', 'claude-usage.jsx');
+const BEGIN = '/* PROPS:BEGIN */';
+const END = '/* PROPS:END */';
+let src = readFileSync(WIDGET, 'utf8');
+const a = src.indexOf(BEGIN), b = src.indexOf(END);
+if (a < 0 || b < 0) {
+  console.warn('\n!! PROPS markers not found in widget - skipped injection');
+} else {
+  const body = Object.entries(uris)
+    .map(([k, v]) => `  ${k}: { w: ${v.w}, h: ${v.h}, src: "${v.src}" },`)
+    .join('\n');
+  src = src.slice(0, a) + BEGIN + '\nconst PROPS = {\n' + body + '\n};\n' + src.slice(b);
+  writeFileSync(WIDGET, src);
+  console.log(`injected ${Object.keys(uris).length} props into widget/claude-usage.jsx`);
+}

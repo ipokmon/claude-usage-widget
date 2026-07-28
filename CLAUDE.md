@@ -7,20 +7,27 @@ install and usage; this file covers what is easy to get wrong when editing.
 ## Layout
 
 ```
-widget/claude-usage.jsx   the entire widget - markup, state machine, sprites, CSS
-tools/spritegen.mjs       sprite pipeline; REWRITES part of the widget (see below)
+widget/claude-usage.jsx   the entire widget - markup, state machine, art, CSS
+tools/spritegen.mjs       character pipeline; REWRITES part of the widget (see below)
+tools/propgen.mjs         scenery pipeline; REWRITES part of the widget (see below)
 poller/                   data layer: poll.mjs, manual-entry.mjs, probe.mjs, lib.mjs
 config/config.json        gitignored; holds the claude.ai session cookie
 cache/usage.json          gitignored; the only thing the widget reads
-sprite/                   source sheets; sprite/out/ is generated
+sprite/                   source sheets; sprite/out/ and sprite/out/props/ are generated
 ```
 
 ## Ground rules
 
-**Never hand-edit the `SPRITES` block** in `widget/claude-usage.jsx`. Everything
-between `/* SPRITES:BEGIN */` and `/* SPRITES:END */` is generated — run
-`node tools/spritegen.mjs`, which rewrites it in place. Hand edits are lost on
-the next run.
+**Never hand-edit the generated blocks** in `widget/claude-usage.jsx`. Two
+regions are machine-written and hand edits are lost on the next run:
+
+| Block | Generator | Contents |
+| --- | --- | --- |
+| `/* SPRITES:BEGIN */ … END */` | `node tools/spritegen.mjs` | character animation strips |
+| `/* PROPS:BEGIN */ … END */` | `node tools/propgen.mjs` | background scenery |
+
+Scenery is authored *in* `propgen.mjs` (ASCII grid for the plant, rectangles for
+everything else) — that file is the source, not the PNGs it emits.
 
 **The widget never makes a network request.** It shells out to `cat` on
 `cache/usage.json` and nothing else. Keep it that way: a flaky endpoint must not
