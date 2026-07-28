@@ -63,6 +63,18 @@ inside the 56px frame box, and `.cw-floor` sits at `bottom: 21px`, so
 `.cw-actor` is pinned to `bottom: 19px`. Change one and the character floats or
 sinks. Verify padding with the lowest-opaque-row check rather than by eye.
 
+## The stylesheet is a template literal
+
+`const CSS = ` … `` is one big JS template literal, so **a stray backtick or
+`${` anywhere inside it — including in a CSS comment — terminates the string and
+breaks the whole widget.** Übersicht surfaces this as a syntax error card on the
+desktop rather than a silent failure, but it is easy to introduce while writing
+explanatory comments. Cheap check before saving:
+
+```bash
+node -e "const s=require('fs').readFileSync('widget/claude-usage.jsx','utf8');console.log([...s].filter(c=>c==='\`').length%2===0?'balanced':'ODD - broken')"
+```
+
 ## Animation model
 
 Every sprite state stays mounted and keeps cycling; the per-activity CSS

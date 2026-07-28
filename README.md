@@ -137,6 +137,16 @@ appearance API.
 
 **Theme:** dark 20:00–07:00, light 07:00–20:00.
 
+Both themes run **dark, cobalt-tinted chrome** — the card is meant to sit with a
+dark desktop wallpaper rather than glow against it. The day/night difference
+lives in the *stage*: a warm mid-tone lit room by day, a dark one at night. So
+"light" here means a lit room, not a light card.
+
+The wall and floor are near-opaque (alpha ~0.95) on purpose. They used to be
+thin washes that took their lightness from the card behind them, which meant
+darkening the chrome dragged the room down with it. At these alphas the room
+holds its own colour whatever the card does.
+
 **Character activity:**
 
 | Hours | State | What it does |

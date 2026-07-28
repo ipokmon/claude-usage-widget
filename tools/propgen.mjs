@@ -93,6 +93,73 @@ function px(img, x, y, c) {
 function rect(img, x, y, w, h, c) {
   for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) px(img, xx, yy, c);
 }
+/** Like px() but with explicit alpha, for shadows. */
+function pxa(img, x, y, c, a) {
+  if (x < 0 || y < 0 || x >= img.width || y >= img.height) return;
+  const i = (y * img.width + x) * 4;
+  img.data[i] = c[0]; img.data[i + 1] = c[1]; img.data[i + 2] = c[2]; img.data[i + 3] = a;
+}
+
+/*
+ * The character sprites carry a hard dark outline and a contact shadow. Props
+ * drawn without either read as flat stickers sitting next to a rendered
+ * character, so the three helpers below retrofit the same treatment.
+ */
+
+/** 1px dark outline around every opaque pixel. */
+function outline(img, c = C.k) {
+  const out = mk(img.width, img.height);
+  img.data.copy(out.data, 0);
+  const solid = (x, y) =>
+    x >= 0 && y >= 0 && x < img.width && y < img.height && img.data[(y * img.width + x) * 4 + 3] > 0;
+  for (let y = 0; y < img.height; y++) {
+    for (let x = 0; x < img.width; x++) {
+      if (solid(x, y)) continue;
+      if (solid(x + 1, y) || solid(x - 1, y) || solid(x, y + 1) || solid(x, y - 1)) px(out, x, y, c);
+    }
+  }
+  return out;
+}
+
+/** Soft shadow beneath an object, so it sits ON the floor rather than above it. */
+function withContactShadow(img, { pad = 2, alphas = [96, 48] } = {}) {
+  const out = mk(img.width, img.height + pad);
+  img.data.copy(out.data, 0);
+  let minX = img.width, maxX = -1, maxY = -1;
+  for (let y = 0; y < img.height; y++) {
+    for (let x = 0; x < img.width; x++) {
+      if (img.data[(y * img.width + x) * 4 + 3] > 0) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0) return out;
+  for (let i = 0; i < pad; i++) {
+    for (let x = minX + i + 1; x <= maxX - i - 1; x++) {
+      pxa(out, x, maxY + 1 + i, C.k, alphas[i] ?? alphas[alphas.length - 1]);
+    }
+  }
+  return out;
+}
+
+/** Offset drop shadow, for the props mounted on the wall. */
+function withDropShadow(img, { dx = 1, dy = 2, alpha = 64 } = {}) {
+  const out = mk(img.width + dx, img.height + dy);
+  for (let y = 0; y < img.height; y++) {
+    for (let x = 0; x < img.width; x++) {
+      if (img.data[(y * img.width + x) * 4 + 3] > 0) pxa(out, x + dx, y + dy, C.k, alpha);
+    }
+  }
+  for (let y = 0; y < img.height; y++) {
+    for (let x = 0; x < img.width; x++) {
+      const i = (y * img.width + x) * 4;
+      if (img.data[i + 3] > 0) px(out, x, y, [img.data[i], img.data[i + 1], img.data[i + 2]]);
+    }
+  }
+  return out;
+}
 
 /** ASCII grid -> image. Validates row lengths so a typo fails loudly. */
 function fromAscii(rows) {
@@ -238,13 +305,20 @@ function rug() {
   return img;
 }
 
+/*
+ * Floor-standing props get a contact shadow; wall-mounted ones get an offset
+ * drop shadow. The plant also gets an auto outline - its leaves were the only
+ * shape with no dark edge, which made it read as flat beside the character.
+ * Each helper grows the canvas downward, so the matching `bottom` in the
+ * widget CSS is offset by the same amount.
+ */
 const BUILD = {
-  rug: rug(),
-  lamp: lamp(),
-  shelf: shelf(),
-  windowDay: windowPane(false),
-  windowNight: windowPane(true),
-  plant: plant(),
+  rug: rug(),                                        // has its own shadow row
+  lamp: withContactShadow(lamp()),                   // bottom -2
+  shelf: withDropShadow(shelf()),                    // bottom -2
+  windowDay: withDropShadow(windowPane(false)),      // bottom -2
+  windowNight: withDropShadow(windowPane(true)),     // bottom -2
+  plant: withContactShadow(outline(plant())),        // bottom -2
 };
 
 /* ------------------------------------------------------ write + inject */

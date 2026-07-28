@@ -117,11 +117,11 @@ const METRIC_ORDER = ["session", "weekly", "weekly_fable"];
 /* PROPS:BEGIN */
 const PROPS = {
   rug: { w: 112, h: 5, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAAAFCAYAAACdD2g5AAAAQElEQVR42mNgQALn6pL+j+LBjxmwga2p3v9H8dDBZOe6T8/vYOBRffTXhzU3jqbsIZb7cAErLaX/o3jwYWxxBQALPgYpg3ZDlQAAAABJRU5ErkJggg==" },
-  lamp: { w: 14, h: 36, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAkCAYAAAC5fwuBAAAAWUlEQVR42mNgQANWWkr/sWEGfACk4NPzO1gxXs1kacSnCa9msjQSowmrZrI0gjVdaCEJ4w3hVTUh/3tS3PDH36jGUY2jGkc1jmokCECKsWGC9SM+TH2NpAAAEa+NTmJC2o0AAAAASUVORK5CYII=" },
-  shelf: { w: 30, h: 15, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAPCAYAAADzun+cAAAAhUlEQVR42mNgGArASkvpPzKmm6FbU73/I2NyzMaQ3FSR9B8ZYzPg0/M7/5ExQUOxmE2Wodh8PK0s4T8M47IY3VyCPu6aMu8/DOOyGJ9jYQ7G62NsFqMbSoyPkR0LczDJFhPjY3SLsUUZXSweMB+PWozT4lU1If8HAjP0pLj9HwiMkeHphQGOiabHkUz+KwAAAABJRU5ErkJggg==" },
-  windowDay: { w: 32, h: 26, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAYAAADWm14/AAAAb0lEQVR42mPoSXH7P5CYAURYaSkNCEZxwLz9N0jGMF+Qo3f4OuDThRasmC4OwGU5NkeMOmB4OoCiRFi36AjJGOYAcvQOPgfQuw4YfA5AD6JPz+8QxDRNA6MOGHnZcNQBow4YMAesqgn5P5B4wB0AAKVxxxD3k34pAAAAAElFTkSuQmCC" },
-  windowNight: { w: 32, h: 26, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAaCAYAAADWm14/AAAAd0lEQVR42mPoSXH7P5CYAURYaSkNCEZxgIlNDMkY5gty9A49B7z58IMkB2BTT5cQAFmMjslyACEfYHMANstxOYImITCyHAAylKZpYOSVA/SuAwafA4Z0GiCm0BqwRDj8siGyj0ZWe2DUAcPXAatqQv4PJB5wBwAAOkeAmzrwllcAAAAASUVORK5CYII=" },
-  plant: { w: 18, h: 24, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAYCAYAAAD3Va0xAAAAd0lEQVR42mNgIAByejL+gzADuQBmQMuyOjAm2UB0A9AxUQbiMwCbgUQbgu41ogwjxTVkuYpkQ0gxjOjYwxVzZKcp9MBmoARQnLIHj0FWWkr/icFEGXSuLgkvHqIGETKMaEOobtDWVG+seGAMwmUYyYZQ3SBSUjQAX1m+PO8ohiwAAAAASUVORK5CYII=" },
+  lamp: { w: 14, h: 38, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAmCAYAAAD0t6qKAAAAZElEQVR42mNgQANWWkr/sWEGfACk4NPzO1gxXs1kacSnCa9msjQSowmrZrI0gjVdaCEJ4w3hVTUh/3tS3PDH36jGUY2jGkc1jmokCECKsWGC9SM+TD2NQMEEUjC6ZgNiMAOlAABhBJ8ycWJs/AAAAABJRU5ErkJggg==" },
+  shelf: { w: 31, h: 17, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAARCAYAAAAlpHdJAAAAl0lEQVR42mNgGCrASkvpPzKmq8FbU73/I2NyzMaqYFNF0n9kjE3Np+d3/iNjoGEOxIQEIXOJMhjd5yA108oS/sMwLsvRzSXoc5Cirinz/sMwLsvxORjmaHRzibIc3WBCPkd3MMzRZFmObAixlmOLPrpZju7zUcsHn+WrakL+DwQGW96T4vZ/IDDWMp2O2AHmAIeBwANqOQDDavc3P64BvgAAAABJRU5ErkJggg==" },
+  windowDay: { w: 33, h: 28, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAcCAYAAADvANYcAAAAfUlEQVR42mPoSXH7P5CYAQRADCstpQHBGI6Yt/8GyRjmG3L0whwBpB2GpyM+XWjBiunmCFwOwOaQUUeMDEdQnDDrFh0hGcMcQY7ewesIetcZg9cR6MH16fkdgpjmaWLUEaNZdNQRo44YVI5YVRPyfyDx4HEECIAYA4kHhSMA+ykLLwP0TSEAAAAASUVORK5CYII=" },
+  windowNight: { w: 33, h: 28, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAcCAYAAADvANYcAAAAhklEQVR42mPoSXH7P5CYAQRADCstpQHBGI4wsYkhGcN8Q45emCOAtMPQcsSbDz9IcgQ29XQLCZDl6JhsRxDyCTZHYHMALofQLCRGpiNABtM8TYzccoLedcbgdcSQTxPEFGwDmjCHbxZF9tnIbE+MOmLkOGJVTcj/gcSDxxEgAGIMJB4UjgAAw1bEqzWYp8UAAAAASUVORK5CYII=" },
+  plant: { w: 18, h: 26, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAaCAYAAAC6nQw6AAAAlklEQVR42mNgwAGstJT+g3BOTwYYw/gMxAJ0A1qW1YExSQZiMwAdIxuI1xBcBmAzEMMwXIage42gYaS6hixXkWQIqYbhNYSYmCMYY/jSErorSEqU2FxHlgFUMQjmfFx5jegsQgomaNC5uiS8eAgaRIxhRKclqhu0NdUbK6a/QfgMI7sCoJpBJKdoqOYEcjAuwwxIwch6ATVqLpN0z/GeAAAAAElFTkSuQmCC" },
 };
 /* PROPS:END */
 
@@ -313,33 +313,44 @@ export const render = ({ output }) => {
 const CSS = `
 .cw-root { --coral:#CC785C; --coral-dim:#B5654B; --cream:#F2E7DC; }
 
+/*
+ * Both themes run dark chrome, tinted cobalt to sit with the desktop wallpaper
+ * rather than glowing against it. The day/night difference now lives in the
+ * STAGE - a warm lit room by day, a dark one at night - instead of in the card.
+ *
+ * The wall and floor are near-opaque on purpose. They used to be thin washes
+ * that took their lightness from the card behind them, so darkening the card
+ * would have dragged the room down with it; at these alphas the room keeps its
+ * own colour no matter what the chrome does.
+ */
 .cw-root[data-theme="light"] {
-  --card-bg: rgba(222,220,227,0.68);
-  --card-brd: rgba(255,255,255,0.60);
-  --text: #1D1D1F;
-  --text-2: rgba(60,60,67,0.62);
-  --track: rgba(60,60,67,0.13);
-  /* wall */
-  --stage-a: rgba(255,236,220,0.55);
-  --stage-b: rgba(214,228,246,0.40);
+  --card-bg: rgba(16,24,46,0.72);
+  --card-brd: rgba(255,255,255,0.10);
+  --text: #F2F4F8;
+  --text-2: rgba(226,232,244,0.60);
+  --track: rgba(226,232,244,0.16);
+  /* Wall: same warm-to-cool hue you liked, taken down to a mid tone. At its
+     original lightness it became a glaring slab once the chrome went dark. */
+  --stage-a: rgba(150,142,136,0.95);
+  --stage-b: rgba(136,146,164,0.94);
   /* floor: warm wood, clearly darker than the wall so the room has a ground */
-  --floor-a: rgba(198,168,142,0.62);
-  --floor-b: rgba(172,142,118,0.72);
-  --floor-edge: rgba(116,88,66,0.30);
-  --shadow: 0 8px 28px rgba(0,0,0,0.16);
+  --floor-a: rgba(126,103,84,0.96);
+  --floor-b: rgba(100,81,66,0.98);
+  --floor-edge: rgba(58,40,28,0.50);
+  --shadow: 0 10px 30px rgba(0,0,0,0.42);
 }
 .cw-root[data-theme="dark"] {
-  --card-bg: rgba(18,18,21,0.66);
-  --card-brd: rgba(255,255,255,0.12);
-  --text: #F5F5F7;
-  --text-2: rgba(235,235,245,0.60);
-  --track: rgba(235,235,245,0.16);
-  --stage-a: rgba(24,26,48,0.60);
-  --stage-b: rgba(46,32,44,0.50);
-  --floor-a: rgba(44,34,38,0.74);
-  --floor-b: rgba(26,20,24,0.82);
-  --floor-edge: rgba(255,255,255,0.09);
-  --shadow: 0 8px 30px rgba(0,0,0,0.42);
+  --card-bg: rgba(9,14,30,0.78);
+  --card-brd: rgba(255,255,255,0.09);
+  --text: #F2F4F8;
+  --text-2: rgba(226,232,244,0.56);
+  --track: rgba(226,232,244,0.14);
+  --stage-a: rgba(26,30,54,0.94);
+  --stage-b: rgba(44,32,46,0.92);
+  --floor-a: rgba(42,32,36,0.96);
+  --floor-b: rgba(24,18,22,0.98);
+  --floor-edge: rgba(255,255,255,0.08);
+  --shadow: 0 10px 32px rgba(0,0,0,0.55);
 }
 
 .cw-card {
@@ -433,11 +444,16 @@ const CSS = `
   background-repeat: no-repeat;
   image-rendering: pixelated;
 }
-.cw-prop-lamp        { left: 8px;   bottom: 21px; }
-.cw-prop-shelf       { left: 150px; bottom: 60px; }
+/* Each of these carries 2px of shadow below the artwork (see propgen's
+   withContactShadow / withDropShadow), so the bottom value is 2px lower than
+   the surface the prop actually rests on.
+   NB: no backticks in this block - the whole stylesheet is a JS template
+   literal, so one would terminate it and break the widget. */
+.cw-prop-lamp        { left: 8px;   bottom: 19px; }
+.cw-prop-shelf       { left: 150px; bottom: 58px; }
 .cw-prop-windowDay,
-.cw-prop-windowNight { left: 264px; bottom: 36px; }
-.cw-prop-plant       { left: 320px; bottom: 21px; }
+.cw-prop-windowNight { left: 264px; bottom: 34px; }
+.cw-prop-plant       { left: 320px; bottom: 19px; }
 /* the rug lies flat ON the floor plane, so it sits well below the floor line
    that everything else stands on */
 .cw-prop-rug         { left: 96px;  bottom: 11px; }
