@@ -253,6 +253,35 @@ function shelf() {
   return img;
 }
 
+/**
+ * A string of bulbs draped across the top of the wall. Spans nearly the full
+ * width, which is the point - the band above the shelf and window was the one
+ * genuinely empty part of the stage.
+ *
+ * The wire is a run of shallow arcs rather than one long sag; a single deep
+ * catenary would drop into the character's headroom at mid-span.
+ */
+function lights() {
+  const W = 326, H = 16, SEG = 54, DIP = 6;
+  const img = mk(W, H);
+  for (let x = 0; x < W; x++) {
+    const t = (x % SEG) / SEG;
+    px(img, x, Math.round(Math.sin(Math.PI * t) * DIP), C.k);
+  }
+  const bulbs = [C.y, C.c, C.P];
+  for (let s = 0, i = 0; s * SEG + SEG / 2 < W; s++, i++) {
+    const bx = Math.round(s * SEG + SEG / 2);
+    const by = DIP + 1;
+    const col = bulbs[i % bulbs.length];
+    px(img, bx, by, C.k);                       // where it hangs from the wire
+    rect(img, bx - 1, by + 1, 3, 2, col);       // bulb
+    px(img, bx - 2, by + 1, C.k); px(img, bx + 2, by + 1, C.k);
+    px(img, bx - 2, by + 2, C.k); px(img, bx + 2, by + 2, C.k);
+    rect(img, bx - 1, by + 3, 3, 1, C.k);
+  }
+  return img;
+}
+
 /** Window frame; `night` swaps the sky and the sun for a moon and stars. */
 function windowPane(night) {
   const img = mk(32, 26);
@@ -313,6 +342,7 @@ function rug() {
  * widget CSS is offset by the same amount.
  */
 const BUILD = {
+  lights: lights(),                                  // hangs, so no shadow
   rug: rug(),                                        // has its own shadow row
   lamp: withContactShadow(lamp()),                   // bottom -2
   shelf: withDropShadow(shelf()),                    // bottom -2

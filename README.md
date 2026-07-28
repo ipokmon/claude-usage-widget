@@ -232,9 +232,10 @@ pinned to `bottom: 19px` to put the feet on the line. Change one, change both.
 
 ## Scenery
 
-The stage also has background props — a floor lamp, a rug, a wall shelf of
-books, a window, and a potted plant — so the character isn't standing in an
-empty void. They are decorative only and always sit behind the actor.
+The stage also has background props — a string of lights across the top, a
+floor lamp, a rug, a wall shelf of books, a window, and a potted plant — so the
+character isn't standing in an empty void. They are decorative only and always
+sit behind the actor.
 
 ```bash
 node tools/propgen.mjs
@@ -249,8 +250,12 @@ under 1 KB.
 
 The window follows the **theme**, not the activity, so it agrees with the card
 around it: blue sky and sun in light, stars and a moon in dark. The lamp's warm
-spill is a CSS radial gradient shown only in the dark theme, which is cheaper
-than authoring a second lit-shade sprite.
+spill is a CSS radial gradient shown only in the dark theme, and the string
+lights pick up a `drop-shadow` halo the same way — both cheaper than authoring
+second, lit variants of the artwork.
+
+The light string is a run of shallow arcs rather than one long sag: a single
+deep catenary dips into the character's headroom at mid-span.
 
 Two things that bit during authoring, worth knowing before you edit the props:
 

@@ -116,6 +116,7 @@ const METRIC_ORDER = ["session", "weekly", "weekly_fable"];
 
 /* PROPS:BEGIN */
 const PROPS = {
+  lights: { w: 326, h: 16, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUYAAAAQCAYAAABqd9auAAAAvklEQVR42u3YzQ2CQBCA0a2FoyVYjoVwsj5DAd6904BGEvdG4s+A7PC+ZK6wL0wgoRwP3f05JVEvExcXF9dPrtaxc+fn4uLiCnnJt4L99JxcXFxcIefcGjbqPFxcXFzhF18LvMY9ubi4uBa7eeRX5p9fGy4uLq7F0e9OK/8luLi4uELxJWFcXFxcX8HG4VwnC3Ry3a51Mrku/alOqudlD+2hhbSQFtIe2sNG/iFwcXFx7dklSZIkSZIkSZK0qx7WJKw120g8OwAAAABJRU5ErkJggg==" },
   rug: { w: 112, h: 5, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAAAFCAYAAACdD2g5AAAAQElEQVR42mNgQALn6pL+j+LBjxmwga2p3v9H8dDBZOe6T8/vYOBRffTXhzU3jqbsIZb7cAErLaX/o3jwYWxxBQALPgYpg3ZDlQAAAABJRU5ErkJggg==" },
   lamp: { w: 14, h: 38, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAmCAYAAAD0t6qKAAAAZElEQVR42mNgQANWWkr/sWEGfACk4NPzO1gxXs1kacSnCa9msjQSowmrZrI0gjVdaCEJ4w3hVTUh/3tS3PDH36jGUY2jGkc1jmokCECKsWGC9SM+TD2NQMEEUjC6ZgNiMAOlAABhBJ8ycWJs/AAAAABJRU5ErkJggg==" },
   shelf: { w: 31, h: 17, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAARCAYAAAAlpHdJAAAAl0lEQVR42mNgGCrASkvpPzKmq8FbU73/I2NyzMaqYFNF0n9kjE3Np+d3/iNjoGEOxIQEIXOJMhjd5yA108oS/sMwLsvRzSXoc5Cirinz/sMwLsvxORjmaHRzibIc3WBCPkd3MMzRZFmObAixlmOLPrpZju7zUcsHn+WrakL+DwQGW96T4vZ/IDDWMp2O2AHmAIeBwANqOQDDavc3P64BvgAAAABJRU5ErkJggg==" },
@@ -449,6 +450,7 @@ const CSS = `
    the surface the prop actually rests on.
    NB: no backticks in this block - the whole stylesheet is a JS template
    literal, so one would terminate it and break the widget. */
+.cw-prop-lights      { left: 12px;  bottom: 74px; }
 .cw-prop-lamp        { left: 8px;   bottom: 19px; }
 .cw-prop-shelf       { left: 150px; bottom: 58px; }
 .cw-prop-windowDay,
@@ -457,6 +459,11 @@ const CSS = `
 /* the rug lies flat ON the floor plane, so it sits well below the floor line
    that everything else stands on */
 .cw-prop-rug         { left: 96px;  bottom: 11px; }
+
+/* the bulbs pick up a warm halo after dark, same idea as the lamp spill */
+[data-theme="dark"] .cw-prop-lights {
+  filter: drop-shadow(0 0 2px rgba(242,208,132,0.55));
+}
 
 /* one window at a time, following the theme rather than the activity, so it
    agrees with the card around it */
