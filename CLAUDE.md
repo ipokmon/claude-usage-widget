@@ -45,6 +45,36 @@ retrying; a failed poll is a normal, expected state that should just flip
 verify with `git check-ignore -v config/config.json` before committing. Log
 output is scrubbed by `redact()` in `poller/lib.mjs` — keep using it.
 
+## Git workflow
+
+Ivan granted standing permission (2026-07-28) to push and open PRs without
+asking each time. `gh` is authed as `ipokmon`; pushes use the macOS keychain.
+
+**Straight to main** — small, self-contained changes you have actually
+verified: a colour or position tweak, a prop tuned and screenshotted, a doc
+correction, a one-file fix. Commit with a message that says *why*, push, and
+report the SHA.
+
+**Branch + PR** — anything larger: multi-file refactors, changes to the poller
+or data layer, anything touching `config/` or secrets handling, new
+dependencies, or a change you could not verify end-to-end. Branch, push, open
+the PR with `gh pr create`, and hand back the URL.
+
+The dividing line is **verifiability, not line count**. A 200-line prop
+regeneration you screenshotted is small; a 5-line change to `poll.mjs` error
+handling you could not exercise is not.
+
+Still ask first, every time, regardless of size:
+
+- force-pushing or rewriting history (`--force`, `rebase`, `filter-branch`)
+- deleting anything remote — branches, the repo
+- merging or closing a PR
+- making the repo public, or anything that changes its visibility
+- committing when `git status` shows changes you did not make
+
+These are configured as prompts in `.claude/settings.local.json` rather than
+blocked outright, so they stay possible but never silent.
+
 ## Sprite pipeline gotchas
 
 `tools/spritegen.mjs` implements PNG decode/encode itself against `node:zlib`.
