@@ -8,6 +8,7 @@ pixel-art character whose activity follows the time of day.
 │  Claude Usage            ● stale│
 │  5-hour limit   resets in 2h 24m│  42%
 │  Weekly (all models)            │  13%
+│  Weekly (Fable)                 │   3%
 │ ┌─────────────────────────────┐ │
 │ │  ╻    ╭─╮      ▤        ⬛  ♣ │ │  <- character stage
 │ │ ═╹════╰─╯══▬▬▬══════════════ │ │
@@ -16,9 +17,11 @@ pixel-art character whose activity follows the time of day.
 └─────────────────────────────────┘
 ```
 
-**It renders two bars, not three.** The weekly-Fable limit exists in the payload
-(inside the `limits` array, scoped by model display name) but reads 0%, so it is
-deliberately left unmapped — see [Known-fragile points](#️-known-fragile-points).
+It renders one bar per metric present in the cache — currently all three:
+5-hour, weekly (all models), and weekly (Fable). The Fable limit lives inside
+the payload's `limits` array, matched by `scope.model.display_name` rather
+than a fixed index, since nothing guarantees the array's order — see
+[Known-fragile points](#️-known-fragile-points).
 
 The payload contains **no token counts** of any kind, only percentages, reset
 times and credit amounts.
@@ -96,6 +99,10 @@ once by hand.
    percentages and reset timestamps. Copy the right ones into `fieldMap`.
    - `scale`: `100` if the API returns `0.0–1.0`, `1` if it already returns `0–100`.
    - `invert`: `true` if the value is what's **remaining** rather than **used**.
+   - For a value inside an array whose order isn't guaranteed (like the
+     per-model entries in `limits`), use a filter bracket instead of a fixed
+     index: `limits[scope.model.display_name=Fable].percent` finds the first
+     element whose nested field matches, wherever it sits in the array.
 7. Test it:
    ```bash
    node poller/poll.mjs

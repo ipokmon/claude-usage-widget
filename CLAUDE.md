@@ -220,19 +220,23 @@ over a websocket on connect, so reload the page rather than touching the `.jsx`.
 
 ## Current state
 
-Live scrape works. Only **two** bars render, not three — by choice, not because
-the data is missing.
+Live scrape works. All **three** bars render — session, weekly (all models),
+and weekly (Fable).
 
 The payload carries a `limits` array (easy to miss: it sits after the
 `seven_day_*` keys, and an early truncated capture hid it). The entry with
 `kind: "weekly_scoped"` and `scope.model.display_name == "Fable"` **is** the
-weekly Fable limit. It reads 0% with `is_active: false`, which is also why every
-`seven_day_*` key is `null`.
+weekly Fable limit. It started at 0% with `is_active: false` on 2026-07-28
+(which is also why every `seven_day_*` key was `null` then); by 2026-07-29 it
+was reading a nonzero percent with `is_active` still `false` — usage accrues
+before Anthropic flips the limit "active".
 
-Ivan chose to leave it unmapped while it reads zero. To enable it, point
-`weekly_fable.pct` at that entry's `percent` — match on
-`scope.model.display_name`, not a fixed index like `limits[2]`, since nothing
-guarantees the array order.
+`config/config.json`'s `weekly_fable.pct` is mapped to that entry's `percent`,
+matched on `scope.model.display_name` rather than a fixed index like
+`limits[2]`, since nothing guarantees the array order. This match-by-field
+lookup is a small addition to `getPath` in `poller/lib.mjs` — see the
+`[field=value]` filter syntax documented there and in
+`config/config.example.json`.
 
 **There is no token count anywhere in the payload** — only percentages, reset
 times and dollar/credit amounts. Asked for in this session and confirmed absent;

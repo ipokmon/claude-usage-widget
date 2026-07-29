@@ -98,14 +98,26 @@ export async function fetchUsage(cfg) {
   }
 }
 
-/** Read a dot/bracket path like "five_hour.utilization" or "limits[0].pct". */
+/**
+ * Read a dot/bracket path like "five_hour.utilization" or "limits[0].pct".
+ * A bracket may also hold a filter, "limits[scope.model.display_name=Fable]",
+ * which finds the first array element whose (possibly nested) field equals
+ * the given value - for arrays whose order isn't guaranteed across requests.
+ */
 export function getPath(obj, path) {
   if (!path) return undefined;
-  return String(path)
-    .replace(/\[(\d+)\]/g, ".$1")
-    .split(".")
-    .filter(Boolean)
-    .reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
+  const tokens = String(path).match(/[^.[\]]+|\[[^\]]*\]/g) || [];
+  return tokens.reduce((acc, tok) => {
+    if (acc == null) return undefined;
+    if (tok[0] !== "[") return acc[tok];
+    const inner = tok.slice(1, -1);
+    const eq = inner.indexOf("=");
+    if (eq === -1) return acc[inner]; // plain numeric index, e.g. [0]
+    if (!Array.isArray(acc)) return undefined;
+    const field = inner.slice(0, eq);
+    const value = inner.slice(eq + 1);
+    return acc.find((item) => String(getPath(item, field)) === value);
+  }, obj);
 }
 
 /** Apply a fieldMap entry to the raw payload -> {pct, resets_at} or null. */
