@@ -161,11 +161,16 @@ holds its own colour whatever the card does.
 
 | Hours | State | What it does |
 |---|---|---|
-| 06:00–09:00 | morning | stretches awake, walks over for coffee, sips, wanders back |
-| 09:00–18:00 | day | works at the desk; periodically gets up, walks the width of the widget, stretches, walks back |
-| 18:00–22:00 | evening | strolls out, reads on a stool, stretches, strolls back |
-| 22:00–23:00 | bedtime | ambles across and yawns |
-| 23:00–06:00 | night | curled up asleep with a `z`, no traversal |
+| 06:00–11:00 | morning | stretches awake, walks over for coffee, sips, wanders back |
+| 11:00–18:00 | day | works at the desk; periodically gets up, walks the width of the widget, has a coffee, stretches, walks back |
+| 18:00–21:00 | evening | strolls out, reads on a stool, stretches, strolls back |
+| 21:00–22:00 | bedtime | ambles across, yawns, ambles back and settles |
+| 22:00–06:00 | night | curled up asleep with a `z`, no traversal |
+
+Activity and theme boundaries deliberately don't line up — the theme is dark
+20:00–07:00 regardless of activity, so morning starts in the dark and evening
+crosses into it. Only the shadow-flip keyframes are light-theme-scoped; movement
+runs in both.
 
 Props (desk, mug, book, stool, the `z`) are drawn **into** the sprites rather
 than composited separately, so the desk only appears while the character is

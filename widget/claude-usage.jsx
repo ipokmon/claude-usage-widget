@@ -52,10 +52,10 @@ function themeFor(h) {
 }
 
 function activityFor(h) {
-  if (h >= 6 && h < 9) return "morning"; // waking, stretching, coffee
-  if (h >= 9 && h < 18) return "day"; // working at the desk, walks about
-  if (h >= 18 && h < 22) return "evening"; // strolling, reading, winding down
-  if (h >= 22 && h < 23) return "bedtime"; // getting ready for bed
+  if (h >= 6 && h < 11) return "morning"; // waking, stretching, coffee
+  if (h >= 11 && h < 18) return "day"; // working at the desk, walks about
+  if (h >= 18 && h < 21) return "evening"; // strolling, reading, winding down
+  if (h >= 21 && h < 22) return "bedtime"; // getting ready for bed
   return "night"; // asleep, zzz
 }
 
@@ -628,9 +628,9 @@ const CSS = `
 /* Flip points are where the character's centre (translateX + 28) passes the
    window at x=120, i.e. translateX = 92, solved along each walk segment. */
 @keyframes cw-day-shadow {
-  0%,51.2%    { filter: drop-shadow(-3px 2px 1px rgba(28,20,14,0.45)); }
-  51.4%,69.5% { filter: drop-shadow(3px 2px 1px rgba(28,20,14,0.45)); }
-  69.7%,100%  { filter: drop-shadow(-3px 2px 1px rgba(28,20,14,0.45)); }
+  0%    { filter: drop-shadow(-3px 2px 1px rgba(28,20,14,0.45)); }
+  46.8% { filter: drop-shadow(3px 2px 1px rgba(28,20,14,0.45)); }
+  74.7% { filter: drop-shadow(-3px 2px 1px rgba(28,20,14,0.45)); }
 }
 @keyframes cw-eve-shadow {
   0%,11.4%    { filter: drop-shadow(-3px 2px 1px rgba(28,20,14,0.45)); }
@@ -654,23 +654,25 @@ const CSS = `
 @keyframes cw-cycle2 { from { background-position-x: 0px } to { background-position-x: -112px } }
 
 /* =========================== DAY (48s) ===========================
-   At the desk, then a walk across the stage, a stretch at the far
-   end, and a walk back. Real traversal, not a frame swap.          */
+   At the desk, then a walk across the stage, a coffee and a stretch
+   at the far end, and a walk back. Real traversal, not a frame swap. */
 [data-activity="day"] .cw-actor     { animation: cw-day-move 48s linear infinite; }
 [data-activity="day"] .cw-flip      { animation: cw-day-face 48s steps(1) infinite; }
 [data-activity="day"] .cw-s-work    { animation: cw-day-work 48s steps(1) infinite; }
 [data-activity="day"] .cw-s-walk    { animation: cw-day-walk 48s steps(1) infinite; }
 [data-activity="day"] .cw-s-stretch { animation: cw-day-stretch 48s steps(1) infinite; }
+[data-activity="day"] .cw-s-coffee  { animation: cw-day-coffee 48s steps(1) infinite; }
 
+@keyframes cw-day-coffee { 0%{opacity:0} 51.5%{opacity:1} 62%{opacity:0} }
 @keyframes cw-day-move {
-  0%,49.5%   { transform: translateX(30px); }
-  56%,65%    { transform: translateX(250px); }
-  71.5%,100% { transform: translateX(30px); }
+  0%,45%     { transform: translateX(30px); }
+  51.5%,70%  { transform: translateX(250px); }
+  76.5%,100% { transform: translateX(30px); }
 }
-@keyframes cw-day-face { 0%{transform:scaleX(1)} 65%{transform:scaleX(-1)} 71.5%{transform:scaleX(1)} }
-@keyframes cw-day-work { 0%{opacity:1} 49.5%{opacity:0} 71.5%{opacity:1} }
-@keyframes cw-day-walk { 0%{opacity:0} 49.5%{opacity:1} 56%{opacity:0} 65%{opacity:1} 71.5%{opacity:0} }
-@keyframes cw-day-stretch { 0%{opacity:0} 56%{opacity:1} 65%{opacity:0} }
+@keyframes cw-day-face { 0%{transform:scaleX(1)} 70%{transform:scaleX(-1)} 76.5%{transform:scaleX(1)} }
+@keyframes cw-day-work { 0%{opacity:1} 45%{opacity:0} 76.5%{opacity:1} }
+@keyframes cw-day-walk { 0%{opacity:0} 45%{opacity:1} 51.5%{opacity:0} 70%{opacity:1} 76.5%{opacity:0} }
+@keyframes cw-day-stretch { 0%{opacity:0} 62%{opacity:1} 70%{opacity:0} }
 
 /* ========================= EVENING (40s) =========================
    Strolls out, reads a while, stretches, strolls back.             */
@@ -713,19 +715,23 @@ const CSS = `
 @keyframes cw-mor-idle { 0%{opacity:1} 2%{opacity:0} 87%{opacity:1} }
 
 /* ========================= BEDTIME (20s) =========================
-   Ambles over and yawns. Lower energy, no return trip.             */
+   Ambles over, yawns, ambles back and settles. Lower energy than the
+   day loop, but a full round trip.                                 */
 [data-activity="bedtime"] .cw-actor  { animation: cw-bed-move 20s linear infinite; }
+[data-activity="bedtime"] .cw-flip { animation: cw-bed-face 20s steps(1) infinite; }
 [data-activity="bedtime"] .cw-s-idle { animation: cw-bed-idle 20s steps(1) infinite; }
 [data-activity="bedtime"] .cw-s-walk { animation: cw-bed-walk 20s steps(1) infinite; }
 [data-activity="bedtime"] .cw-s-yawn { animation: cw-bed-yawn 20s steps(1) infinite; }
 
 @keyframes cw-bed-move {
-  0%,12%   { transform: translateX(30px); }
-  32%,100% { transform: translateX(150px); }
+  0%,10%   { transform: translateX(30px); }
+  30%,60%  { transform: translateX(150px); }
+  80%,100% { transform: translateX(30px); }
 }
-@keyframes cw-bed-idle { 0%{opacity:1} 12%{opacity:0} }
-@keyframes cw-bed-walk { 0%{opacity:0} 12%{opacity:1} 32%{opacity:0} }
-@keyframes cw-bed-yawn { 0%{opacity:0} 32%{opacity:1} }
+@keyframes cw-bed-face { 0%{transform:scaleX(1)} 60%{transform:scaleX(-1)} 80%{transform:scaleX(1)} }
+@keyframes cw-bed-idle { 0%{opacity:1} 10%{opacity:0} 80%{opacity:1} }
+@keyframes cw-bed-walk { 0%{opacity:0} 10%{opacity:1} 30%{opacity:0} 60%{opacity:1} 80%{opacity:0} }
+@keyframes cw-bed-yawn { 0%{opacity:0} 30%{opacity:1} 60%{opacity:0} }
 
 /* ========================== NIGHT ================================
    Curled up asleep. The sprite carries its own zzz. Minimal motion. */
