@@ -24,7 +24,14 @@ regions are machine-written and hand edits are lost on the next run:
 | Block | Generator | Contents |
 | --- | --- | --- |
 | `/* SPRITES:BEGIN */ … END */` | `node tools/spritegen.mjs` | character animation strips |
+| `/* CAT:BEGIN */ … END */` | `node tools/spritegen.mjs` | cat animation strips |
 | `/* PROPS:BEGIN */ … END */` | `node tools/propgen.mjs` | background scenery |
+
+`spritegen.mjs` runs two **jobs** through one pipeline - `character` and `cat` -
+each with its own grid, palette and scale. Sharing a palette would force the
+rabbit's orange ramp onto a grey cat; sharing a scale would size the cat
+against the rabbit's tallest pose. The cat's whole 4x3 sheet is one file, so
+its three states are selected by frame index (`use:`), not by sheet.
 
 Scenery is authored *in* `propgen.mjs` (ASCII grid for the plant, rectangles for
 everything else) — that file is the source, not the PNGs it emits.
@@ -111,6 +118,27 @@ Every sprite state stays mounted and keeps cycling; the per-activity CSS
 timeline only cross-fades `opacity`. Mounting on demand would restart the fast
 walk and typing cycles from frame 0 each time a state appeared.
 
+**Handoffs must land on the same percentage.** `steps(1)` means the value on
+`[p_i, p_i+1)` is the value declared *at* `p_i`, so if the outgoing state
+switches off at 56.1% and the incoming switches on at 56.2%, nothing is on
+screen for that tenth of a percent. At a 48s cycle that is ~48ms and it reads
+on the desktop as the character **flashing off and back**. Two states both on
+is the same class of bug in the other direction - the poses ghost through each
+other. Check with:
+
+```bash
+node tools/check-sprite-coverage.mjs
+```
+
+It sweeps every activity for both actors and asserts exactly one sprite is
+visible at all times. Run it after touching any timeline. The timelines are
+written as one keyframe per phase boundary for exactly this reason - do not
+reintroduce "off at X, on at X+0.1" pairs.
+
+Pose, motion and facing should all change on the same instant too. A walk pose
+that outlasts its `*-move` segment leaves the character walking on the spot,
+and a facing flip that lands late mirrors the desk for a few frames.
+
 Four nested elements, each owning exactly one thing: `.cw-actor` traverses
 (`translateX`) **and carries the cast shadow**, `.cw-flip` faces (`scaleX`),
 `.cw-sprite` fades, `.cw-film` runs the frame cycle. Collapsing these makes the
@@ -122,6 +150,49 @@ carried the `scaleX(-1)`, the shadow would flip with the character and light it
 from the wrong side for the whole return walk. Keeping the flip one level in
 makes the shadow correct by construction rather than by sign-juggling in the
 keyframes.
+
+## The cat
+
+The cat obeys three rules, and they are **machine-checked** - run it after
+touching any `*-move` keyframes, the character's included:
+
+```bash
+node tools/check-cat-rules.mjs
+```
+
+1. it only *traverses* while the character is standing still
+2. it does not traverse during every such window (bedtime and night it never
+   moves at all; the others use one of the character's several still windows)
+3. its range (67px) is far shorter than the character's (142-220px)
+
+Rule 1 holds by construction only because **each cat timeline shares its
+activity's duration** with the character's. Retime a character walk without
+retiming the cat and the windows silently drift into each other - which is
+exactly what the checker catches. It parses the real `translateX` keyframes out
+of the widget and samples both actors on a shared clock, so it cannot fall out
+of date with the CSS.
+
+**Sleep uses only source frames 6 and 7**, not all of row 1. Frames 4 and 5 are
+a cat rising with its rear in the air - 4 reads as standing outright - so
+cycling the full row made the cat look like it kept waking up. Only 6 and 7 are
+properly curled, and alternating those two at 3.5s a frame reads as breathing.
+If the cat ever looks restless again, check `use:` on the sleep sheet first.
+
+The cat's cadences are all slower than the character's equivalents on purpose:
+a brisk cat beside a stationary rabbit reads as agitated.
+
+The basket is two sprites, `catbed` and `catbedRim`. The sleeping cat is 46px
+wide and would completely hide a one-piece basket drawn behind it, so the near
+rim is listed in `FOREGROUND_PROPS` and rendered *after* the cat. Two things
+that look wrong if disturbed:
+
+- **Do not nudge the sleeping pose down** to "sit it in" the basket. That puts
+  its paws *below* the rim and the whole thing reads as a plank lying across
+  the cat. The cat sits on the floor line like every other state; the rim
+  occludes it.
+- The rim's end caps stand 3px proud of the rim band on purpose. At this size
+  the band alone also reads as a plank - the raised sides are what make it a
+  container.
 
 ## Lighting
 

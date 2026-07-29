@@ -351,121 +351,167 @@ function blit(dst, src, dx, dy) {
 
 /* ------------------------------------------------------------------ pipeline */
 
-// Sheet -> state. Quadrants are numbered in reading order: 0=TL 1=TR 2=BL 3=BR.
-// `use` picks and orders the frames; omit it to take all four.
-const SHEETS = [
-  { file: 'ChatGPT Image Jul 28, 2026, 12_13_10 PM (1).png', state: 'idle' },
-  { file: 'ChatGPT Image Jul 28, 2026, 12_13_10 PM (2).png', state: 'walk' },
-  { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (3).png', state: 'stretch' },
-  { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (4).png', state: 'coffee' },
-  // Frames 0/1 of this sheet are plain front-facing idle with no desk; only
-  // 2/3 actually show the character at the desk, so cycling all four would
-  // teleport them in and out of the scene.
-  { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (5).png', state: 'work', use: [2, 3] },
-  { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (6).png', state: 'read' },
-  { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (7).png', state: 'yawn' },
-  { file: 'ChatGPT Image Jul 28, 2026, 12_13_12 PM (8).png', state: 'sleep' },
+/*
+ * Two jobs run through the identical pipeline: the rabbit (2x2 sheets, one
+ * state per sheet) and the cat (a single 4x3 sheet holding all three states).
+ * The cat art has the same four defects as the rabbit art - gradient
+ * background, glow, contact-shadow crumbs, per-row size drift - so it wants
+ * the same corrections rather than a second bespoke path.
+ *
+ * Each job keeps its OWN palette and scale. Sharing them would force the
+ * rabbit's orange ramp onto a grey cat, and would size the cat against the
+ * rabbit's tallest pose instead of its own.
+ *
+ * Frames are indexed in reading order across the grid: row * cols + col.
+ */
+const JOBS = [
+  {
+    name: 'character',
+    dir: SRC,
+    out: OUT,
+    grid: { cols: 2, rows: 2 },
+    frame: 56,        // frame box in px (also the CSS display size)
+    contentH: 48,     // tallest sprite maps to this inside the box
+    paletteSize: 24,
+    marker: 'SPRITES',
+    constName: 'SPRITES',
+    sheets: [
+      { file: 'ChatGPT Image Jul 28, 2026, 12_13_10 PM (1).png', state: 'idle' },
+      { file: 'ChatGPT Image Jul 28, 2026, 12_13_10 PM (2).png', state: 'walk' },
+      { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (3).png', state: 'stretch' },
+      { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (4).png', state: 'coffee' },
+      // Frames 0/1 of this sheet are plain front-facing idle with no desk; only
+      // 2/3 actually show the character at the desk, so cycling all four would
+      // teleport them in and out of the scene.
+      { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (5).png', state: 'work', use: [2, 3] },
+      { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (6).png', state: 'read' },
+      { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (7).png', state: 'yawn' },
+      { file: 'ChatGPT Image Jul 28, 2026, 12_13_12 PM (8).png', state: 'sleep' },
+    ],
+  },
+  {
+    name: 'cat',
+    dir: join(SRC, 'cat'),
+    out: join(OUT, 'cat'),
+    grid: { cols: 4, rows: 3 },
+    // Roomier box than the rabbit's relative to its content: the sleeping and
+    // walking poses are far wider than they are tall, and blit() clips in
+    // silence, so the box is sized off the widest pose rather than the tallest.
+    frame: 48,
+    contentH: 28,     // deliberately about half the rabbit - it reads as a pet
+    paletteSize: 16,  // greys, cream and an outline; 24 buys nothing here
+    marker: 'CAT',
+    constName: 'CAT',
+    sheets: [
+      // One sheet, three states. Row 0 mixes two standing/trotting poses with
+      // two lying ones, so walk takes only 0-1; rows 1 and 2 are clean runs.
+      { file: 'ChatGPT Image Jul 28, 2026, 08_05_20 PM.png', state: 'walk', use: [0, 1] },
+      // Row 1 is nominally the sleep run, but frames 4 and 5 are a cat rising
+      // with its rear in the air - 4 especially reads as standing up. Cycling
+      // them makes the cat look like it keeps waking. Only 6 and 7 are properly
+      // curled, and alternating those two reads as breathing.
+      { file: 'ChatGPT Image Jul 28, 2026, 08_05_20 PM.png', state: 'sleep', use: [6, 7] },
+      { file: 'ChatGPT Image Jul 28, 2026, 08_05_20 PM.png', state: 'clean', use: [8, 9, 10, 11] },
+    ],
+  },
 ];
 
-/*
- * The source renders each sprite at roughly 10 screen px per art pixel, so
- * ~48px of output lands about one output pixel per art pixel: real pixel art
- * rather than a smooth photo of pixel art. The widget then displays the frame
- * at 56 CSS px with image-rendering:pixelated, so a retina panel doubles it
- * cleanly. Small + few colours also keeps the inlined base64 tiny.
- */
-const FRAME = 56;           // frame box in px (also the CSS display size)
-const CONTENT_H = 48;       // tallest sprite maps to this inside the box
-const PALETTE_SIZE = 24;    // shared across every state so colours stay stable
-
-mkdirSync(OUT, { recursive: true });
-
-// Pass 1: cut, key out the background, trim. Keep everything in memory so a
-// single global scale can be derived - per-sheet scaling would make the
-// character change size between states.
-const cut = [];
-for (const sheet of SHEETS) {
-  const img = decodePNG(readFileSync(join(SRC, sheet.file)));
-  const qw = img.width >> 1, qh = img.height >> 1;
-  const frames = [];
-  for (const q of sheet.use ?? [0, 1, 2, 3]) {
-    const quad = crop(img, (q % 2) * qw, ((q / 2) | 0) * qh, qw, qh);
-    const keyed = dropGroundBits(cleanAlpha(removeBackground(quad)));
-    const bb = bbox(keyed);
-    if (!bb) { console.warn(`  !! ${sheet.state} frame ${q}: nothing left after keying`); continue; }
-    frames.push({ img: crop(keyed, bb.x, bb.y, bb.w, bb.h), bb });
-  }
-  cut.push({ ...sheet, frames });
-  const hs = frames.map((f) => f.bb.h);
-  console.log(`${sheet.state.padEnd(8)} ${frames.length} frames  heights ${hs.join(',')}`);
-}
-
-const globalMaxH = Math.max(...cut.flatMap((s) => s.frames.map((f) => f.bb.h)));
-const scale = CONTENT_H / globalMaxH;
-console.log(`\nglobal max sprite height ${globalMaxH}px -> scale ${scale.toFixed(4)}\n`);
-
-/*
- * Scaling is two-level, because the source has a systematic flaw: in every
- * sheet the bottom-row poses are rendered ~7% smaller than the top-row ones.
- * That is a rendering artifact, not intent - left alone the character visibly
- * pulses mid-cycle.
- *   within a state : normalise every frame to that state's tallest, killing
- *                    the jitter
- *   across states  : keep each state's natural size via the global scale, so
- *                    the curled-up sleep pose stays shorter than idle
- */
-
-// Pass 2: normalise, bottom-centre align, append into a strip.
-const strips = [];
-for (const sheet of cut) {
-  const stateMaxH = Math.max(...sheet.frames.map((f) => f.bb.h));
-  const strip = blank(FRAME * sheet.frames.length, FRAME);
-  sheet.frames.forEach((f, i) => {
-    const norm = (stateMaxH / f.bb.h) * scale;
-    const dw = Math.max(1, Math.round(f.bb.w * norm));
-    const dh = Math.max(1, Math.round(f.bb.h * norm));
-    const small = resize(f.img, dw, dh);
-    blit(strip, small, i * FRAME + Math.round((FRAME - dw) / 2), FRAME - dh - 2);
-  });
-  strips.push({ state: sheet.state, frames: sheet.frames.length, img: strip });
-}
-
-// Pass 3: one shared palette across every state, then write.
-const palette = buildPalette(strips.map((s) => s.img), PALETTE_SIZE);
-console.log(`palette: ${palette.length} colours\n`);
-
-const manifest = {};
-const uris = {};
-for (const s of strips) {
-  const q = quantize(s.img, palette);
-  const png = encodePNG(q);
-  writeFileSync(join(OUT, `${s.state}.png`), png);
-  manifest[s.state] = { frames: s.frames, w: q.width, h: q.height, bytes: png.length };
-  uris[s.state] = `data:image/png;base64,${png.toString('base64')}`;
-  console.log(`wrote ${s.state.padEnd(8)} ${q.width}x${q.height}  ${s.frames} frames  ${png.length} bytes`);
-}
-writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
-
-const total = Object.values(manifest).reduce((a, m) => a + m.bytes, 0);
-console.log(`\ntotal ${total} bytes raw, ~${Math.round((total * 4) / 3)} bytes base64`);
-
-/* --------------------------------------------------- inject into the widget */
-// The widget is a single self-contained .jsx (it is symlinked into Übersicht's
-// widgets dir, so relative asset URLs would not resolve). Sprites therefore go
-// in as data URIs, rewritten in place between the markers so regenerating the
-// art never means hand-editing the widget.
 const WIDGET = join(HERE, '..', 'widget', 'claude-usage.jsx');
-const BEGIN = '/* SPRITES:BEGIN */';
-const END = '/* SPRITES:END */';
-let src = readFileSync(WIDGET, 'utf8');
-const a = src.indexOf(BEGIN), b = src.indexOf(END);
-if (a < 0 || b < 0) {
-  console.warn('\n!! sprite markers not found in widget - skipped injection');
-} else {
+
+function runJob(job) {
+  const { cols, rows } = job.grid;
+  const FRAME = job.frame;
+  console.log(`\n=== ${job.name} ===`);
+  mkdirSync(job.out, { recursive: true });
+
+  // Pass 1: cut, key out the background, trim. Everything stays in memory so a
+  // single scale can be derived across the job - per-sheet scaling would make
+  // the subject change size between states.
+  const cut = [];
+  const decoded = new Map();
+  for (const sheet of job.sheets) {
+    if (!decoded.has(sheet.file)) {
+      decoded.set(sheet.file, decodePNG(readFileSync(join(job.dir, sheet.file))));
+    }
+    const img = decoded.get(sheet.file);
+    const cw = Math.floor(img.width / cols), ch = Math.floor(img.height / rows);
+    const frames = [];
+    for (const q of sheet.use ?? [...Array(cols * rows).keys()]) {
+      const cell = crop(img, (q % cols) * cw, Math.floor(q / cols) * ch, cw, ch);
+      const keyed = dropGroundBits(cleanAlpha(removeBackground(cell)));
+      const bb = bbox(keyed);
+      if (!bb) { console.warn(`  !! ${sheet.state} frame ${q}: nothing left after keying`); continue; }
+      frames.push({ img: crop(keyed, bb.x, bb.y, bb.w, bb.h), bb });
+    }
+    cut.push({ ...sheet, frames });
+    console.log(`${sheet.state.padEnd(8)} ${frames.length} frames  heights ${frames.map((f) => f.bb.h).join(',')}`);
+  }
+
+  const globalMaxH = Math.max(...cut.flatMap((s) => s.frames.map((f) => f.bb.h)));
+  const scale = job.contentH / globalMaxH;
+  console.log(`\nmax sprite height ${globalMaxH}px -> scale ${scale.toFixed(4)}\n`);
+
+  /*
+   * Scaling is two-level, because the source has a systematic flaw: the lower
+   * grid row renders ~7% smaller than the upper one. That is a rendering
+   * artifact, not intent - left alone the subject visibly pulses mid-cycle.
+   *   within a state : normalise every frame to that state's tallest, killing
+   *                    the jitter
+   *   across states  : keep each state's natural size via the job scale, so a
+   *                    curled-up sleep pose stays shorter than a standing one
+   */
+  const strips = [];
+  for (const sheet of cut) {
+    const stateMaxH = Math.max(...sheet.frames.map((f) => f.bb.h));
+    const strip = blank(FRAME * sheet.frames.length, FRAME);
+    sheet.frames.forEach((f, i) => {
+      const norm = (stateMaxH / f.bb.h) * scale;
+      const dw = Math.max(1, Math.round(f.bb.w * norm));
+      const dh = Math.max(1, Math.round(f.bb.h * norm));
+      if (dw > FRAME || dh > FRAME) {
+        console.warn(`  !! ${sheet.state} frame ${i} is ${dw}x${dh}, larger than the ${FRAME}px box - blit will clip it`);
+      }
+      blit(strip, resize(f.img, dw, dh), i * FRAME + Math.round((FRAME - dw) / 2), FRAME - dh - 2);
+    });
+    strips.push({ state: sheet.state, frames: sheet.frames.length, img: strip });
+  }
+
+  const palette = buildPalette(strips.map((s) => s.img), job.paletteSize);
+  console.log(`palette: ${palette.length} colours\n`);
+
+  const manifest = {};
+  const uris = {};
+  for (const s of strips) {
+    const q = quantize(s.img, palette);
+    const png = encodePNG(q);
+    writeFileSync(join(job.out, `${s.state}.png`), png);
+    manifest[s.state] = { frames: s.frames, w: q.width, h: q.height, bytes: png.length };
+    uris[s.state] = `data:image/png;base64,${png.toString('base64')}`;
+    console.log(`wrote ${s.state.padEnd(8)} ${q.width}x${q.height}  ${s.frames} frames  ${png.length} bytes`);
+  }
+  writeFileSync(join(job.out, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
+  const total = Object.values(manifest).reduce((a, m) => a + m.bytes, 0);
+  console.log(`total ${total} bytes raw, ~${Math.round((total * 4) / 3)} bytes base64`);
+
+  /* ------------------------------------------------- inject into the widget */
+  // The widget is a single self-contained .jsx (it is symlinked into
+  // Übersicht's widgets dir, so relative asset URLs would not resolve). Art
+  // therefore goes in as data URIs, rewritten in place between the markers so
+  // regenerating it never means hand-editing the widget.
+  const BEGIN = `/* ${job.marker}:BEGIN */`;
+  const END = `/* ${job.marker}:END */`;
+  let src = readFileSync(WIDGET, 'utf8');
+  const a = src.indexOf(BEGIN), b = src.indexOf(END);
+  if (a < 0 || b < 0) {
+    console.warn(`!! ${job.marker} markers not found in widget - skipped injection`);
+    return;
+  }
   const body = Object.entries(uris)
     .map(([k, v]) => `  ${k}: { frames: ${manifest[k].frames}, src: "${v}" },`)
     .join('\n');
-  src = src.slice(0, a) + BEGIN + '\nconst SPRITES = {\n' + body + '\n};\n' + src.slice(b);
+  src = src.slice(0, a) + BEGIN + `\nconst ${job.constName} = {\n` + body + '\n};\n' + src.slice(b);
   writeFileSync(WIDGET, src);
-  console.log(`injected ${Object.keys(uris).length} sprite strips into widget/claude-usage.jsx`);
+  console.log(`injected ${Object.keys(uris).length} ${job.name} strips into widget/claude-usage.jsx`);
 }
+
+for (const job of JOBS) runJob(job);

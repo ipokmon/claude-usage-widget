@@ -368,6 +368,46 @@ function armchair() {
   return img;
 }
 
+/*
+ * The cat's basket, for the alcove between the armchair and the fireplace.
+ *
+ * Two pieces on purpose. The sleeping cat is 46px wide and would completely
+ * hide a basket drawn as one sprite behind it, so the far rim and cushion go
+ * BEHIND the cat and the near rim goes IN FRONT - which is also how a real
+ * basket occludes its occupant. The widget renders `catbedRim` after the cat
+ * (see FOREGROUND_PROPS) and nudges the sleeping pose down so the rim crosses
+ * its paws.
+ */
+const BED_W = 52;
+
+function catbed() {
+  const H = 9;
+  const img = mk(BED_W, H);
+  rect(img, 0, 0, BED_W, 3, C.p);              // far rim
+  rect(img, 1, 1, BED_W - 2, 1, [201, 126, 100]); // lit edge along the far rim
+  rect(img, 3, 3, BED_W - 6, 6, C.u);          // cushion, same muted tone as the rug
+  rect(img, 5, 3, BED_W - 10, 2, C.c);         // lit top of the cushion
+  return img;
+}
+
+/*
+ * The near rim, drawn over the cat so it reads as sitting down inside.
+ * The end caps stand 3px taller than the rim band: at this size the band alone
+ * just looks like a plank laid across the cat, and it is the raised sides that
+ * make the shape read as a container.
+ */
+function catbedRim() {
+  const H = 8;
+  const img = mk(BED_W, H);
+  rect(img, 4, 3, BED_W - 8, 5, C.p);          // rim band, covers the cat's paws
+  rect(img, 5, 4, BED_W - 10, 1, [201, 126, 100]); // lit band
+  rect(img, 0, 0, 5, H, C.w);                  // woven sides, standing proud
+  rect(img, BED_W - 5, 0, 5, H, C.w);
+  rect(img, 1, 1, 3, 1, [170, 124, 88]);       // lit top on each side
+  rect(img, BED_W - 4, 1, 3, 1, [170, 124, 88]);
+  return img;
+}
+
 /** Window frame; `night` swaps the sky and the sun for a moon and stars. */
 function windowPane(night) {
   const W = 42, H = 34;
@@ -441,7 +481,14 @@ const BUILD = {
   windowDay: windowPane(false),
   windowNight: windowPane(true),
   armchair: withContactShadow(outline(armchair())),  // bottom -2
-  plant: withContactShadow(outline(plant())),        // bottom -2
+  // plant: dropped from the scene when the cat's basket took the right-hand
+  // side. plant() above is deliberately kept so it can be put back by adding
+  // one line here - the ASCII art is the only source for it.
+  // plant: withContactShadow(outline(plant())),
+  catbed: withContactShadow(outline(catbed())),      // bottom -2
+  // no contact shadow: the rim is the front of the same object, not a second
+  // thing resting on the floor
+  catbedRim: outline(catbedRim()),
 };
 
 /* ------------------------------------------------------ write + inject */

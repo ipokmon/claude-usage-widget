@@ -199,6 +199,29 @@ A pixel-art rabbit, built from the eight AI-generated sheets in `sprite/`. Each
 sheet is a 2×2 grid of poses for one state: idle, walk, stretch, coffee, work,
 read, yawn, sleep.
 
+It shares the room with a cat, from the single 4×3 sheet in `sprite/cat/`. Only
+some of the grid is used: frames 0–1 for the walk (the rest of row 0 is lying
+poses), **6–7** for sleep, and row 2 for grooming. Sleep skips frames 4–5
+because both are a cat rising with its rear in the air, which made it look like
+it kept waking up; the two curled frames alternating slowly read as breathing.
+
+The room runs left to right: lamp, window, shelf, armchair on the rug,
+fireplace, and the cat's basket closing the right end.
+
+**The cat's three rules**, which `node tools/check-cat-rules.mjs` verifies
+against the real keyframes rather than by eye:
+
+1. it only *moves about* while the rabbit is standing still
+2. it doesn't move every time the rabbit is still — at bedtime and overnight it
+   never leaves the basket at all, and otherwise it uses just one of the
+   rabbit's several stationary stretches
+3. it covers 67px against the rabbit's 142–220px, so it reads as the calmer of
+   the two
+
+That first rule only holds because each cat timeline shares its activity's
+duration with the rabbit's. Retime one of the rabbit's walks and the two can
+drift into each other — run the checker.
+
 ### Regenerating the sprites
 
 ```bash
@@ -325,10 +348,14 @@ Read this before filing a bug against yourself.
 
 ```
 widget/claude-usage.jsx    the widget: layout, state machine, sprites, all CSS
-tools/spritegen.mjs        character pipeline; rewrites the SPRITES block in the widget
+tools/spritegen.mjs        rabbit + cat pipeline; rewrites SPRITES and CAT blocks
 tools/propgen.mjs          scenery pipeline; rewrites the PROPS block in the widget
-sprite/*.png               source sheets (2x2 poses each)
+tools/check-cat-rules.mjs  asserts the cat's movement rules against the CSS
+tools/check-sprite-coverage.mjs  asserts exactly one sprite is visible at all times
+sprite/*.png               rabbit source sheets (2x2 poses each)
+sprite/cat/*.png           cat source sheet (one 4x3 grid, all three states)
 sprite/out/                generated strips + manifest
+sprite/out/cat/            generated cat strips
 sprite/out/props/          generated scenery
 poller/poll.mjs            primary scraper; degrades gracefully, always exits 0
 poller/probe.mjs           dev/repair tool: dump response, suggest field paths
