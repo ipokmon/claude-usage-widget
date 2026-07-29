@@ -353,9 +353,11 @@ const CSS = `
   --track: rgba(226,232,244,0.14);
   --stage-a: rgba(26,30,54,0.94);
   --stage-b: rgba(44,32,46,0.92);
-  --floor-a: rgba(42,32,36,0.96);
-  --floor-b: rgba(24,18,22,0.98);
-  --floor-edge: rgba(255,255,255,0.08);
+  /* One shade up from (42,32,36)/(24,18,22): at those values the floor sank
+     into the wall after dark and the floor line all but vanished. */
+  --floor-a: rgba(58,45,48,0.96);
+  --floor-b: rgba(38,29,32,0.98);
+  --floor-edge: rgba(255,255,255,0.12);
   --shadow: 0 10px 32px rgba(0,0,0,0.55);
 }
 
