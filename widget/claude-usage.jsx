@@ -38,6 +38,12 @@ export const refreshFrequency = 60000;
 // ---------------------------------------------------------------------------
 const DEBUG_HOUR = null;
 
+// ---------------------------------------------------------------------------
+// Set to a month 0-11 to force the seasonal decoration (e.g. 9 = October).
+// Leave null for the real month. Independent of DEBUG_HOUR.
+// ---------------------------------------------------------------------------
+const DEBUG_MONTH = null;
+
 export const className = `
   top: 10px;
   left: 10px;
@@ -76,6 +82,23 @@ const ACTIVITY_LABEL = {
   bedtime: "heading to bed",
   night: "asleep",
 };
+
+function currentMonth() {
+  if (DEBUG_MONTH !== null) return DEBUG_MONTH;
+  return new Date().getMonth();
+}
+
+/**
+ * Purely calendar-driven decoration, independent of theme and activity - no
+ * network request, no poller, just a month check. Most months have no
+ * decoration at all.
+ */
+function seasonFor(m) {
+  if (m === 9) return "halloween"; // October: pumpkin on the windowsill
+  if (m === 11) return "holiday"; // December: string lights lit all day
+  if (m === 0) return "frost"; // January: frost creeping over the window
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Formatting helpers
@@ -136,6 +159,7 @@ const PROPS = {
   armchair: { w: 30, h: 30, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAhklEQVR42mNgGLHASkvpPz5MM0vzmkrwYppYPqAWh6RF4cWjFg86i0nKGdSymJA5GGYMC4tJypLEWkwMpprFhAoWUvCoxUTFMbF4wCwmKVeMWjxqcUSAHxwTW4Kh6yGrcCfKEDTziNZDsevJtZiahlDFYvTQoLoeoIIEWmN8lhvQCg+aLhMAguPYRYSHP5cAAAAASUVORK5CYII=" },
   catbed: { w: 52, h: 11, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAALCAYAAAAwVK6TAAAAUklEQVR42mPYmur9fzhhBhBxsi5lWGC4h4ZVDFlpKf2H4WlVBWD86fmdIYFh7kX2AwMMDHUPMaADZA8NNTzqoVEPDbSHgAIJwwGje8pgKGOYPwB6YACUP18r8QAAAABJRU5ErkJggg==" },
   catbedRim: { w: 52, h: 8, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAAICAYAAAC2wNw9AAAAR0lEQVR42mPoSXH7j46ttJT+MwxyAHIjNrczgIhVNRFwPNQ8hO52BlwxNBQwzhhCx1tTvYcEJtpDJ+tShgQeuTE06qFB5CEAGkj5yRivxIcAAAAASUVORK5CYII=" },
+  pumpkin: { w: 9, h: 10, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAKCAYAAABmBXS+AAAAS0lEQVR42mNgQAJWWkr/e1Lc/oNoBnQAEoQpgGGYGFzBr2NJODFYIYzzoswIKw3CDOgC2NjEmUSUm/A5HiUogJwEXBg9rAzQMUwOAOWBr7VzDARJAAAAAElFTkSuQmCC" },
 };
 /* PROPS:END */
 
@@ -170,6 +194,10 @@ const Scenery = () => (
       .map((name) => (
         <Prop key={name} name={name} />
       ))}
+    {/* January: frost creeping over the window, drawn in CSS rather than as a
+        sprite - it needs to sit above the window art either theme, and a
+        gradient reads fine at this size without new art. */}
+    <div className="cw-frost" />
   </div>
 );
 
@@ -288,6 +316,7 @@ export const render = ({ output }) => {
   const hour = currentHour();
   const theme = themeFor(hour);
   const activity = activityFor(hour);
+  const season = seasonFor(currentMonth());
 
   let cache = null;
   let parseError = false;
@@ -306,7 +335,7 @@ export const render = ({ output }) => {
   const noCache = Boolean(cache?.__nocache);
 
   return (
-    <div className="cw-root" data-theme={theme} data-activity={activity}>
+    <div className="cw-root" data-theme={theme} data-activity={activity} data-season={season}>
       <style>{CSS}</style>
 
       <div className="cw-card">
@@ -571,6 +600,20 @@ const CSS = `
 /* the rug lies flat ON the floor plane, so it sits well below the floor line
    that everything else stands on; the armchair sits on its right end */
 .cw-prop-rug         { left: 112px; bottom: 11px; }
+/* seasonal (October) - sits on the windowsill's right pane, clear of the
+   central mullion at x~116-118 */
+.cw-prop-pumpkin     { left: 118px; bottom: 36px; opacity: 0; }
+
+/* ---- seasonal decoration ----
+   A third axis, independent of theme and activity: purely a calendar check,
+   no network involved. Most months show nothing at all. */
+[data-season="halloween"] .cw-prop-pumpkin { opacity: 1; }
+/* same treatment as the window it sits beside: no shadow in the light theme,
+   since it sits right at the room's daytime light source, but a normal
+   dark-theme drop-shadow like every other prop gets */
+[data-theme="dark"][data-season="halloween"] .cw-prop-pumpkin {
+  filter: drop-shadow(-2px 1px 1px rgba(0,0,0,0.50));
+}
 
 /* Firelight. Unlike the lamp this is lit in BOTH themes - the fire is burning
    either way - just stronger after dark when there is less to compete with. */
@@ -585,12 +628,34 @@ const CSS = `
 [data-theme="dark"] .cw-prop-lights {
   filter: drop-shadow(0 0 2px rgba(242,208,132,0.55));
 }
+/* December: the same halo, but lit all day rather than only after dark -
+   the string is switched on for the season, not just for the night */
+[data-season="holiday"] .cw-prop-lights {
+  filter: drop-shadow(0 0 2px rgba(242,208,132,0.55));
+}
 
 /* one window at a time, following the theme rather than the activity, so it
    agrees with the card around it */
 .cw-prop-windowNight { opacity: 0; }
 [data-theme="dark"] .cw-prop-windowDay   { opacity: 0; }
 [data-theme="dark"] .cw-prop-windowNight { opacity: 1; }
+
+/* January: frost creeping in from the window's top corners. Sits directly on
+   top of the window prop (same box, painted after it in DOM order), under
+   both themes - the cold doesn't care which one is running. */
+.cw-frost {
+  position: absolute; left: 96px; bottom: 34px;
+  width: 42px; height: 34px; opacity: 0;
+  /* fixed-radius circles rather than keyword sizing (farthest-corner etc.) -
+     those spread the white across nearly the whole pane and read as a hazy
+     smudge instead of frost sitting in the corners */
+  background:
+    radial-gradient(circle 15px at 0% 0%,   rgba(255,255,255,0.85), rgba(255,255,255,0) 100%),
+    radial-gradient(circle 15px at 100% 0%, rgba(255,255,255,0.85), rgba(255,255,255,0) 100%),
+    radial-gradient(circle 9px at 0% 100%,   rgba(255,255,255,0.55), rgba(255,255,255,0) 100%),
+    radial-gradient(circle 9px at 100% 100%, rgba(255,255,255,0.55), rgba(255,255,255,0) 100%);
+}
+[data-season="frost"] .cw-frost { opacity: 1; }
 
 /* Warm spill from the lamp, lit only in the dark theme. Cheap way to make the
    night scene feel occupied without drawing a second lit-shade sprite. */

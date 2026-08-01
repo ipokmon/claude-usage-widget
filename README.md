@@ -193,7 +193,9 @@ while still in the dark theme, which is correct — it's dark out but you're up.
 
 Set `DEBUG_HOUR` near the top of `widget/claude-usage.jsx` to an hour `0–23`
 (e.g. `3`, `7.5`, `13`, `19`, `22.5`), save, and Übersicht reloads instantly.
-Set it back to `null` for real time.
+Set it back to `null` for real time. `DEBUG_MONTH` (`0–11`) does the same for
+the [seasonal decoration](#seasonal-decoration) below, independently of
+`DEBUG_HOUR`.
 
 To inspect it without minimising every window, Übersicht mirrors the widget
 canvas over HTTP:
@@ -211,9 +213,32 @@ slot in the cycle:
 const r = document.querySelector('.cw-root');
 r.setAttribute('data-activity', 'evening');   // or morning/day/bedtime/night
 r.setAttribute('data-theme', 'dark');
+r.setAttribute('data-season', 'holiday');     // or halloween/frost - clear the
+                                               // attribute for no decoration
 document.querySelectorAll('.cw-sprite, .cw-actor').forEach(el =>
   el.getAnimations().forEach(a => { a.currentTime = 40000 * 0.30; a.pause(); }));
 ```
+
+Note this only sticks until the next 60s refresh, which re-renders from real
+`Date` and overwrites it — for anything longer than a quick look, set
+`DEBUG_HOUR`/`DEBUG_MONTH` in the file instead.
+
+## Seasonal decoration
+
+A third axis, independent of both theme and activity: purely a `Date` check,
+no network, no poller. Most months show nothing at all.
+
+| Month | `data-season` | What changes |
+|---|---|---|
+| October | `halloween` | A pumpkin appears on the windowsill |
+| December | `holiday` | The ceiling string lights stay lit all day, not just after dark |
+| January | `frost` | Frost creeps in over the window's corners |
+
+All three are plain CSS gated on the `data-season` attribute — see
+`seasonFor()` in `widget/claude-usage.jsx` for the month mapping, and
+`DEBUG_MONTH` right above `DEBUG_HOUR` for testing without waiting for the
+calendar. The pumpkin is the one piece of new art; it's drawn in
+`tools/propgen.mjs` like the rest of the scenery and regenerated the same way.
 
 ## The character
 
@@ -291,9 +316,12 @@ claims the right side, which is why the window and rug sit further left than
 the space would otherwise suggest.
 
 A potted plant used to hold the right-hand corner and was dropped when the
-basket took that spot. `plant()` is deliberately still in `propgen.mjs` — it
-is the one prop authored as an ASCII grid — so it can be put back by
-uncommenting its line in the prop table.
+basket took that spot. `plant()` is deliberately still in `propgen.mjs` so it
+can be put back by uncommenting its line in the prop table.
+
+One prop is generated but not always shown: the [seasonal](#seasonal-decoration)
+pumpkin is always in `PROPS` and the DOM, same as every other prop, but sits at
+`opacity: 0` except in October — CSS decides visibility, not React.
 
 The bookcase's forty-odd book spines are laid out pseudo-randomly from a
 **fixed seed**, not hand-placed. Too many to author by hand, and the fixed seed

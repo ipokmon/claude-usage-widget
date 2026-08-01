@@ -216,6 +216,25 @@ const plant = () => fromAscii([
   '......kkkkkk......',
 ]);
 
+/*
+ * Seasonal decoration: a pumpkin for the windowsill in October. Organic like
+ * the plant, so authored the same way - an ASCII grid rather than rectangles.
+ * Uses the flame colours (f/F) rather than the terracotta (p/P) used
+ * elsewhere: terracotta reads brown at this size, flame orange reads as a
+ * pumpkin. outline() (applied in BUILD) gives it the dark edge the other
+ * organic shape (the plant) also needs.
+ */
+const pumpkin = () => fromAscii([
+  '....w....',
+  '...www...',
+  '.FFFFFFF.',
+  'FFfFfFfFF',
+  'FfFFfFFfF',
+  'FFfFfFfFF',
+  '.FFFFFFF.',
+  '..FFFFF..',
+]);
+
 /** Floor lamp. The shade stays cream; the warm spill at night is CSS. */
 function lamp() {
   const img = mk(14, 36);
@@ -489,6 +508,9 @@ const BUILD = {
   // no contact shadow: the rim is the front of the same object, not a second
   // thing resting on the floor
   catbedRim: outline(catbedRim()),
+  // seasonal (October) - sits on the windowsill, so it gets the same
+  // contact-shadow treatment as anything else resting on a surface
+  pumpkin: withContactShadow(outline(pumpkin())),
 };
 
 /* ------------------------------------------------------ write + inject */
