@@ -1,8 +1,13 @@
 # CLAUDE.md
 
 Übersicht desktop widget showing Claude.ai usage limits, with a pixel-art
-character whose activity follows the time of day. Read `README.md` first for
-install and usage; this file covers what is easy to get wrong when editing.
+character whose activity follows the time of day and a room that redecorates
+itself by month. Read `README.md` first for install and usage; this file covers
+what is easy to get wrong when editing.
+
+Three independent axes, all from local `Date`, none of them talking to the
+network: **theme** (dark 20:00–07:00), **activity** (morning → night), and
+**season** (one decoration per month).
 
 ## Layout
 
@@ -41,8 +46,11 @@ rabbit's orange ramp onto a grey cat; sharing a scale would size the cat
 against the rabbit's tallest pose. The cat's whole 4x3 sheet is one file, so
 its three states are selected by frame index (`use:`), not by sheet.
 
-Scenery is authored *in* `propgen.mjs` (ASCII grid for the plant, rectangles for
-everything else) — that file is the source, not the PNGs it emits.
+Scenery is authored *in* `propgen.mjs` — that file is the source, not the PNGs
+it emits. Organic silhouettes are ASCII grids, everything else is rectangles
+and loops. Don't reach for the AI pipeline for a prop: at this size hand-drawn
+is faster than generate-then-clean-up, and it is the only way a new prop stays
+on the room's palette.
 
 **The widget never makes a network request.** It shells out to `cat` on
 `cache/usage.json` and nothing else. Keep it that way: a flaky endpoint must not
@@ -213,12 +221,67 @@ that look wrong if disturbed:
   the band alone also reads as a plank - the raised sides are what make it a
   container.
 
+## Seasonal decoration
+
+One per month, driven only by `Date().getMonth()`. Ten are props; `frost`
+(January) and `lights` (December) are not — frost is a CSS overlay on the
+window, and December just leaves the ceiling string's existing night-time halo
+switched on all day.
+
+**Each season is named after the thing that appears**, not the holiday, so the
+CSS is a flat 1:1 mapping onto a `.cw-prop-*` class. Renaming these back to
+`halloween`/`valentines` breaks that mapping and puts a culture-specific label
+on months like May that are only decorated for the season.
+
+**Adding or renaming a month means four places must agree**, and the failure
+mode is asymmetric:
+
+| Place | If you miss it |
+| --- | --- |
+| `BUILD` in `propgen.mjs` | Prop never exists; the widget silently shows nothing |
+| `SEASONS` in the widget | Month renders undecorated |
+| `SEASONAL_PROPS` in the widget | **Prop shows every day of the year** |
+| CSS position + the show-rule list | Prop sits at 0,0 or never turns on |
+
+The third row is the one that bites. `.cw-seasonal` is what holds these at
+`opacity: 0`, and membership of that set is the only thing that applies it — a
+prop added to `PROPS` and given a position but left out of `SEASONAL_PROPS`
+becomes permanent scenery. There is no checker for this yet; verify a new month
+by scrubbing `data-season` rather than by reading the diff.
+
+Only one is ever on screen, so they **share stations** rather than each getting
+their own spot: five on the windowsill (`bottom: 36px` puts every one of them on
+it, whatever its height, because they all carry 2px of contact shadow), three on
+the floor, two on the wall above the armchair.
+
+Four things that had to be redrawn after looking at them rendered, all
+commented at their definitions — they generalise to any new prop at this size:
+
+- **The turkey's drumsticks must splay.** Upright beside the body they vanish
+  into the silhouette and it reads as a loaf of bread.
+- **The flower stems must fan** from one point in the pot. Three parallel stems
+  of equal length read as a fence.
+- **The book pile's page-edges alternate ends.** A light band running the full
+  width of every book turns the stack into a layer cake.
+- **Nothing goes directly under the window.** The gap below the sill is about
+  as tall as these props are, so anything there touches the frame and reads as
+  stuck to the glass. That is why the beach ball sits on the left floor.
+
+`outline()` draws into a **same-size** canvas, so art touching the edge loses
+its outline silently. Leave a 1px margin — `hearts()` does.
+
 ## Lighting
 
 One dominant light per theme: the window (x≈120) by day, the fire (x≈277) after
 dark. Props throw away from it via per-prop `drop-shadow` filters, hand-set
-rather than computed — there are only a handful, and eyeballing beats a formula
-at this scale. The ceiling string is deliberately excluded.
+rather than computed — eyeballing beats a formula at this scale. The ceiling
+string is deliberately excluded.
+
+The seasonal props follow the same rule, with two shortcuts that only work
+because of where they sit: the five on the windowsill get **no** light-theme
+shadow at all (they are sitting in the daytime light source, same as the window
+itself), and after dark every seasonal prop is left of the fire, so they share
+one `[data-theme="dark"] .cw-seasonal` rule instead of ten.
 
 The character's shadow flips as it walks past the window, so `cw-*-shadow`
 keyframes exist for the three activities that occur in the light theme
@@ -237,10 +300,30 @@ practical way to see the widget when windows cover the desktop. Widgets arrive
 over a websocket on connect, so reload the page rather than touching the `.jsx`.
 `README.md` has a devtools snippet for scrubbing to a specific activity state.
 
+Two things about that mirror, both learned by wasting time on them:
+
+- **Setting `data-*` by hand only lasts until the next 60s refresh**, which
+  re-renders from real `Date` and wipes it. For anything longer than a glance,
+  set `DEBUG_HOUR` / `DEBUG_MONTH` in the file instead.
+- The page is empty for a moment after a reload while the websocket delivers
+  the widget, so a devtools snippet run immediately finds no `.cw-root`.
+
+To compare many states at once — twelve seasons in two themes, say — **clone
+`.cw-root`** into a plain container, set different `data-season`/`data-theme` on
+each clone, drop the header/metrics/footer, and screenshot the strip. The
+stylesheet is global once the widget has rendered, so every clone styles itself
+correctly. That turns 24 screenshot round-trips into one, and side-by-side is
+the only way spacing and shadow-direction mistakes are actually visible.
+
 ## Current state
 
 Live scrape works. All **three** bars render — session, weekly (all models),
 and weekly (Fable).
+
+The seasonal axis is complete: all twelve months are decorated, so there is no
+"undecorated month" case left to design for. What is *not* built is a checker
+for the four-place agreement described above — that invariant is currently
+manual, unlike the cat's rules and sprite coverage.
 
 The payload carries a `limits` array (easy to miss: it sits after the
 `seven_day_*` keys, and an early truncated capture hid it). The entry with

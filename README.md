@@ -1,7 +1,8 @@
 # Claude Usage — animated desktop widget
 
 An Übersicht desktop widget showing your Claude.ai plan usage limits, with a
-pixel-art character whose activity follows the time of day.
+pixel-art character whose activity follows the time of day, in a room that
+redecorates itself every month.
 
 ```
 ┌─────────────────────────────────┐
@@ -153,7 +154,8 @@ widget stays clean.
 ## Time-of-day behaviour
 
 Both axes are computed from local `Date` — no location lookup, no system
-appearance API.
+appearance API. A third, [seasonal](#seasonal-decoration) axis works the same
+way off the month.
 
 **Theme:** dark 20:00–07:00, light 07:00–20:00.
 
@@ -472,7 +474,7 @@ Read this before filing a bug against yourself.
 ```
 widget/claude-usage.jsx    the widget: layout, state machine, sprites, all CSS
 tools/spritegen.mjs        rabbit + cat pipeline; rewrites SPRITES and CAT blocks
-tools/propgen.mjs          scenery pipeline; rewrites the PROPS block in the widget
+tools/propgen.mjs          scenery + seasonal props; rewrites the PROPS block
 tools/check-cat-rules.mjs  asserts the cat's movement rules against the CSS
 tools/check-sprite-coverage.mjs  asserts exactly one sprite is visible at all times
 tools/install-launchd.sh   generates + loads the poll job for THIS checkout
