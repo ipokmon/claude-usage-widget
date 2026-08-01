@@ -50,11 +50,15 @@ function suggest(node, path = "", out = { pct: [], time: [] }, depth = 0) {
 }
 
 const cfg = readConfig();
-console.log(`Probing: ${resolveEndpoint(cfg)}\n`);
+console.log(`Probing: ${redact(resolveEndpoint(cfg))}\n`);
 
 const payload = await fetchUsage(cfg);
 
 console.log("=== RAW RESPONSE ===");
+console.log(
+  "NOTE: credentials, UUIDs and emails below are masked by redact(), but this\n" +
+    "is still YOUR account's data. Re-read it before pasting anywhere public.\n"
+);
 console.log(redact(JSON.stringify(payload, null, 2)));
 
 const { pct, time } = suggest(payload);

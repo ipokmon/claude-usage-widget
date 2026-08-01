@@ -8,7 +8,7 @@
 
   "orgId": "",
 
-  "pollIntervalMinutes": 10,
+  "_interval_note": "The poll interval is NOT set here. It is StartInterval in launchd/com.claude-usage-poller.plist.template (600s); re-run tools/install-launchd.sh after changing it.",
 
   "_fieldMap_help": "Maps the endpoint's JSON shape onto the widget's three metrics. 'pct' and 'resets_at' are dot/bracket paths into the response (e.g. 'five_hour.utilization' or 'limits[0].pct'). A bracket may also be a filter, 'limits[scope.model.display_name=Fable].percent', which finds the first array element whose nested field matches - use this instead of a fixed index for arrays whose order isn't guaranteed. 'scale' multiplies the raw value (use 100 if the API returns 0.0-1.0, use 1 if it already returns 0-100). 'invert' converts a REMAINING value into a USED percentage. Run 'node poller/probe.mjs' to dump the real response and get suggested paths.",
   "fieldMap": {

@@ -67,15 +67,25 @@ launchd (every 10 min)
    ln -sf "$PWD/widget/claude-usage.jsx" "$HOME/Library/Application Support/Übersicht/widgets/claude-usage.jsx"
    ```
 
-3. **Seed some data** so the widget has something to show:
+3. **Point the widget at your checkout.** Edit the `PROJECT` constant at the
+   top of `widget/claude-usage.jsx` to this folder's absolute path. Übersicht
+   runs the widget from its own directory, so there is nothing to infer it
+   from. Get the exact line to paste with:
+   ```bash
+   pwd
+   ```
+   If you skip this the widget renders **"No cache file at that path."** with a
+   hint naming `PROJECT` — that message means this step, not a broken poller.
+
+4. **Seed some data** so the widget has something to show:
    ```bash
    node poller/manual-entry.mjs 42 61 12
    ```
 
-4. **Configure the live scraper** — see below — then load the poller:
+5. **Configure the live scraper** — see below — then install the poll job. The
+   script fills in your checkout path and `node` location and loads it:
    ```bash
-   cp launchd/com.ivan.claude-usage-poller.plist ~/Library/LaunchAgents/
-   launchctl load ~/Library/LaunchAgents/com.ivan.claude-usage-poller.plist
+   bash tools/install-launchd.sh
    ```
 
 ## Setting up the live data path
@@ -272,13 +282,18 @@ pinned to `bottom: 19px` to put the feet on the line. Change one, change both.
 
 The stage also has background props — a string of lights across the top, a
 floor lamp, a window, a full-height bookcase, an armchair on a rug, a lit stone
-fireplace, and a potted plant — so the character isn't standing in an empty
+fireplace, and the cat's basket — so the character isn't standing in an empty
 void. They are decorative only and always sit behind the actor.
 
 Left to right the room reads: lamp, the character's working area, window,
-bookcase, armchair on the rug, fireplace, plant. The fireplace claims the right
-side, which is why the window and rug sit further left than the space would
-otherwise suggest.
+bookcase, armchair on the rug, fireplace, the cat's basket. The fireplace
+claims the right side, which is why the window and rug sit further left than
+the space would otherwise suggest.
+
+A potted plant used to hold the right-hand corner and was dropped when the
+basket took that spot. `plant()` is deliberately still in `propgen.mjs` — it
+is the one prop authored as an ASCII grid — so it can be put back by
+uncommenting its line in the prop table.
 
 The bookcase's forty-odd book spines are laid out pseudo-randomly from a
 **fixed seed**, not hand-placed. Too many to author by hand, and the fixed seed
@@ -291,7 +306,8 @@ node tools/propgen.mjs
 
 These are hand-authored in code rather than generated, because they are small
 regular shapes that are quicker to draw than to generate and then clean up. The
-plant is an ASCII grid (organic outline); everything else is composed from
+(currently unused) plant is an ASCII grid, since an organic outline is awkward
+to express any other way; everything else is composed from
 rectangles. All of it is drawn at the same 1-art-pixel-per-output-pixel scale as
 the character, which is what keeps the stage looking like one set. Total cost is
 under 1 KB.
@@ -335,6 +351,41 @@ Wall colour lives in `--stage-a/b`, floor in `--floor-a/b/--floor-edge`, per
 theme. They are deliberately separate variables — retinting the floor should
 never touch the wall.
 
+## Security
+
+The session cookie in `config/config.json` is a **bearer credential for your
+whole Claude account** — not just usage data. Anyone who reads that file can
+act as you until it expires. Three things follow from that:
+
+**Keep the file to yourself.** It is created at the default `0644`, which is
+readable by every account and unsandboxed process on the machine:
+
+```bash
+chmod 600 config/config.json
+```
+
+The poller checks this on every run and prints a warning to `poller.log` if the
+mode is looser. It warns rather than refuses — a noisy poll beats a dead widget.
+
+**The endpoint is allowlisted on purpose.** `poller/lib.mjs` will only send the
+cookie to `claude.ai` or `anthropic.com` over HTTPS. `endpoint` is a value you
+paste in by hand, which makes it exactly the kind of thing that gets copied out
+of a fork or an issue thread; without the check one wrong hostname would ship
+your session cookie to a stranger on every poll while the widget carried on
+showing a healthy green bar. If Anthropic genuinely moves to a new host, add it
+to `ALLOWED_HOSTS`.
+
+**Be careful what you paste when reporting a bug.** `probe.mjs` prints a real
+API response. `redact()` masks credentials, UUIDs and email addresses, but the
+remainder is still your account's data — re-read it before posting it anywhere
+public.
+
+Never commit `config/config.json`. It is gitignored; confirm with:
+
+```bash
+git check-ignore -v config/config.json
+```
+
 ## ⚠️ Known-fragile points
 
 Read this before filing a bug against yourself.
@@ -352,9 +403,11 @@ Read this before filing a bug against yourself.
 4. **`fieldMap` is a guess until you verify it.** If percentages look wrong
    (inverted, or 100× off), you've got `invert` or `scale` wrong — not a bug in
    the poller.
-5. **launchd needs absolute paths.** The plist hardcodes
-   `/opt/homebrew/bin/node` and this project's path. Moving the folder breaks
-   the job; re-copy the plist after editing the paths.
+5. **launchd needs absolute paths.** The generated plist bakes in your `node`
+   location and this project's path, so **moving the folder breaks the job** —
+   and launchd reports that by doing nothing at all. Re-run
+   `bash tools/install-launchd.sh` after moving, and update `PROJECT` in
+   `widget/claude-usage.jsx` to match.
 
 ## Files
 
@@ -364,8 +417,9 @@ tools/spritegen.mjs        rabbit + cat pipeline; rewrites SPRITES and CAT block
 tools/propgen.mjs          scenery pipeline; rewrites the PROPS block in the widget
 tools/check-cat-rules.mjs  asserts the cat's movement rules against the CSS
 tools/check-sprite-coverage.mjs  asserts exactly one sprite is visible at all times
-sprite/*.png               rabbit source sheets (2x2 poses each)
-sprite/cat/*.png           cat source sheet (one 4x3 grid, all three states)
+tools/install-launchd.sh   generates + loads the poll job for THIS checkout
+sprite/*.png               rabbit source sheets, one per state (2x2 poses each)
+sprite/cat/sheet.png       cat source sheet (one 4x3 grid, all three states)
 sprite/out/                generated strips + manifest
 sprite/out/cat/            generated cat strips
 sprite/out/props/          generated scenery
@@ -375,5 +429,9 @@ poller/manual-entry.mjs    fallback; self-contained, no network, no shared code
 poller/lib.mjs             shared helpers for the scraper path only
 config/config.example.json template — copy to config.json (gitignored)
 cache/usage.json           last-known-good data (gitignored)
-launchd/*.plist            the 10-minute poll job
+launchd/*.plist.template   the 10-minute poll job; filled in by install-launchd.sh
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).

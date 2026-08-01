@@ -16,9 +16,19 @@
 //  would make them visibly jump instead.
 // ============================================================================
 
+// ---------------------------------------------------------------------------
+// EDIT THIS after cloning — the absolute path to your checkout of this repo.
+// Übersicht runs `command` from its own directory, and this file is normally
+// installed as a symlink, so neither a relative path nor __dirname resolves to
+// anything useful. `tools/install-launchd.sh` prints the line to paste here.
+// ---------------------------------------------------------------------------
 const PROJECT = "/Users/ivanwu/Desktop/claude/claudetoken widget";
 
-export const command = `cat "${PROJECT}/cache/usage.json" 2>/dev/null || true`;
+// A missing cache file is REPORTED, not swallowed. The previous `|| true` gave
+// empty output, which rendered as the ordinary "no usage data yet" state — so
+// a wrong PROJECT above looked exactly like a poller that had not run yet, and
+// left no clue anywhere on the desktop.
+export const command = `cat "${PROJECT}/cache/usage.json" 2>/dev/null || echo '{"__nocache":true}'`;
 
 export const refreshFrequency = 60000;
 
@@ -293,6 +303,7 @@ export const render = ({ output }) => {
   const data = cache?.data ?? null;
   const hasData = data && METRIC_ORDER.some((k) => data[k]);
   const stale = Boolean(cache?.stale);
+  const noCache = Boolean(cache?.__nocache);
 
   return (
     <div className="cw-root" data-theme={theme} data-activity={activity}>
@@ -321,10 +332,21 @@ export const render = ({ output }) => {
             <div className="cw-empty">
               {parseError
                 ? "Cache file is unreadable."
-                : "No usage data yet."}
+                : noCache
+                  ? "No cache file at that path."
+                  : "No usage data yet."}
               <span className="cw-empty-hint">
-                Run <code>node poller/poll.mjs</code> — or{" "}
-                <code>manual-entry.mjs</code> to enter it by hand.
+                {noCache ? (
+                  <>
+                    Check <code>PROJECT</code> at the top of{" "}
+                    <code>claude-usage.jsx</code> points at your checkout.
+                  </>
+                ) : (
+                  <>
+                    Run <code>node poller/poll.mjs</code> — or{" "}
+                    <code>manual-entry.mjs</code> to enter it by hand.
+                  </>
+                )}
               </span>
             </div>
           )}

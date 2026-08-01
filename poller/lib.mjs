@@ -4,7 +4,13 @@
 // fallback must keep working even if the scraper path is broken, so it carries
 // its own small copy of the cache-writing logic. That duplication is on purpose.
 
-import { readFileSync, writeFileSync, renameSync, mkdirSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  renameSync,
+  mkdirSync,
+  statSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -20,11 +26,23 @@ export const LABELS = {
   weekly_fable: "Weekly (Fable)",
 };
 
-/** Strip anything that looks like a credential before it can reach a log file. */
+/**
+ * Strip anything that looks like a credential or an account identifier before
+ * it can reach a log file - or, more importantly, a pasted bug report. The
+ * last two patterns matter for probe.mjs, which dumps a whole API response:
+ * that payload carries org/account UUIDs and sometimes an email, and the one
+ * time you run probe.mjs is the one time you are about to paste output into a
+ * public issue.
+ */
 export function redact(text) {
   return String(text)
     .replace(/sk-ant-[A-Za-z0-9_-]+/g, "sk-ant-***REDACTED***")
-    .replace(/sessionKey=[^;\s"]+/g, "sessionKey=***REDACTED***");
+    .replace(/sessionKey=[^;\s"]+/g, "sessionKey=***REDACTED***")
+    .replace(
+      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+      "***UUID-REDACTED***"
+    )
+    .replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "***EMAIL-REDACTED***");
 }
 
 export function readConfig() {
@@ -45,13 +63,69 @@ export function readConfig() {
   if (!cfg.sessionCookie || cfg.sessionCookie.includes("REPLACE-ME")) {
     throw new Error("config/config.json has no real sessionCookie yet.");
   }
+  warnIfWorldReadable();
   return cfg;
+}
+
+/**
+ * This file holds a live session cookie in plaintext. At the default 0644 any
+ * other account or unsandboxed process on the machine can read it. Warn rather
+ * than throw: a noisy poll is better than a dead widget, and the fix is one
+ * command.
+ */
+function warnIfWorldReadable() {
+  try {
+    const mode = statSync(CONFIG_PATH).mode & 0o077;
+    if (mode !== 0) {
+      console.warn(
+        `[config] WARNING: config/config.json is readable by other users on this machine (mode ${(
+          statSync(CONFIG_PATH).mode & 0o777
+        ).toString(8)}). It holds a live session cookie. Fix with:\n  chmod 600 "${CONFIG_PATH}"`
+      );
+    }
+  } catch {
+    // Not worth failing a poll over a stat() we could not perform.
+  }
 }
 
 /** Accepts either a bare cookie value or a full "sessionKey=..." string. */
 export function cookieHeader(cfg) {
   const c = String(cfg.sessionCookie).trim();
   return c.includes("=") ? c : `sessionKey=${c}`;
+}
+
+/**
+ * Hosts we are willing to send the session cookie to.
+ *
+ * fetchUsage() attaches a live sessionKey - a bearer credential for the whole
+ * account - to whatever URL this returns. `endpoint` is captured by hand from
+ * DevTools and pasted in, so it is exactly the kind of value that gets copied
+ * out of a fork, a blog post or an issue thread. Without this check a single
+ * wrong hostname silently exfiltrates the cookie every poll, and the widget
+ * keeps showing a healthy green bar while it happens. Fail closed instead.
+ */
+const ALLOWED_HOSTS = ["claude.ai", "anthropic.com"];
+
+function assertSafeEndpoint(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`'endpoint' is not a valid URL: ${url}`);
+  }
+  if (parsed.protocol !== "https:") {
+    throw new Error(
+      `Refusing to send the session cookie over ${parsed.protocol}// - 'endpoint' must be https.`
+    );
+  }
+  const host = parsed.hostname.toLowerCase();
+  const ok = ALLOWED_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+  if (!ok) {
+    throw new Error(
+      `Refusing to send the session cookie to '${host}'. 'endpoint' must be on ${ALLOWED_HOSTS.join(" or ")}. If this is a legitimate new Anthropic host, add it to ALLOWED_HOSTS in poller/lib.mjs.`
+    );
+  }
+  return parsed;
 }
 
 export function resolveEndpoint(cfg) {
@@ -61,7 +135,9 @@ export function resolveEndpoint(cfg) {
       "config/config.json has no 'endpoint' yet. Capture it from DevTools > Network on the claude.ai usage page (see README), then paste it in."
     );
   }
-  return url.replace(/\{orgId\}/g, cfg.orgId || "");
+  const resolved = url.replace(/\{orgId\}/g, cfg.orgId || "");
+  assertSafeEndpoint(resolved);
+  return resolved;
 }
 
 export async function fetchUsage(cfg) {
