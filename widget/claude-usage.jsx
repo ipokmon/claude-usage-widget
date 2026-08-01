@@ -90,14 +90,31 @@ function currentMonth() {
 
 /**
  * Purely calendar-driven decoration, independent of theme and activity - no
- * network request, no poller, just a month check. Most months have no
- * decoration at all.
+ * network request, no poller, just a month check.
+ *
+ * Each season is named after the thing that appears, so the CSS below is a
+ * flat 1:1 mapping onto a prop class (or, for `frost` and `lights`, onto the
+ * one element that is not a prop). Naming these for holidays instead would
+ * break that, and would put a culture-specific label on months like May that
+ * are only decorated for the season.
  */
+const SEASONS = [
+  "frost", // Jan - creeping over the window
+  "hearts", // Feb
+  "balloons", // Mar
+  "umbrella", // Apr - showers, stood open to dry
+  "flowers", // May
+  "icecream", // Jun
+  "beachball", // Jul
+  "watermelon", // Aug
+  "books", // Sep - back to school
+  "pumpkin", // Oct
+  "turkey", // Nov - cooling on the sill
+  "lights", // Dec - the ceiling string stays lit all day
+];
+
 function seasonFor(m) {
-  if (m === 9) return "halloween"; // October: pumpkin on the windowsill
-  if (m === 11) return "holiday"; // December: string lights lit all day
-  if (m === 0) return "frost"; // January: frost creeping over the window
-  return null;
+  return SEASONS[m] ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -159,7 +176,16 @@ const PROPS = {
   armchair: { w: 30, h: 30, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAhklEQVR42mNgGLHASkvpPz5MM0vzmkrwYppYPqAWh6RF4cWjFg86i0nKGdSymJA5GGYMC4tJypLEWkwMpprFhAoWUvCoxUTFMbF4wCwmKVeMWjxqcUSAHxwTW4Kh6yGrcCfKEDTziNZDsevJtZiahlDFYvTQoLoeoIIEWmN8lhvQCg+aLhMAguPYRYSHP5cAAAAASUVORK5CYII=" },
   catbed: { w: 52, h: 11, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAALCAYAAAAwVK6TAAAAUklEQVR42mPYmur9fzhhBhBxsi5lWGC4h4ZVDFlpKf2H4WlVBWD86fmdIYFh7kX2AwMMDHUPMaADZA8NNTzqoVEPDbSHgAIJwwGje8pgKGOYPwB6YACUP18r8QAAAABJRU5ErkJggg==" },
   catbedRim: { w: 52, h: 8, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADQAAAAICAYAAAC2wNw9AAAAR0lEQVR42mPoSXH7j46ttJT+MwxyAHIjNrczgIhVNRFwPNQ8hO52BlwxNBQwzhhCx1tTvYcEJtpDJ+tShgQeuTE06qFB5CEAGkj5yRivxIcAAAAASUVORK5CYII=" },
-  pumpkin: { w: 9, h: 10, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAKCAYAAABmBXS+AAAAS0lEQVR42mNgQAJWWkr/e1Lc/oNoBnQAEoQpgGGYGFzBr2NJODFYIYzzoswIKw3CDOgC2NjEmUSUm/A5HiUogJwEXBg9rAzQMUwOAOWBr7VzDARJAAAAAElFTkSuQmCC" },
+  pumpkin: { w: 9, h: 10, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAKCAYAAABmBXS+AAAAT0lEQVR42mNgQAJWWkr/e1Lc/oNoBnQAEoQpgGGYGFzBizIjnBisEMT4dSzp/9ZUbxRJZD7xitAFMRQR5SZ8jkcJCiAnARdGDysDdAyTAwCQopq93SCNXAAAAABJRU5ErkJggg==" },
+  hearts: { w: 24, h: 15, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAPCAYAAAD+pA/bAAAAZklEQVR42mNgIBJYaSn9B2F0NlUAyLBdHj5gjM6mmuF3cgowMFUsobkFuCyhmuHYLKG64eiWoBtOVAojNhliM5xgCiM3GRKVAChJJTS3gOgURmkyJCqFUZoMcaUw0hURsIQ6ikgAAMFzHd9rTichAAAAAElFTkSuQmCC" },
+  balloons: { w: 24, h: 20, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAUCAYAAACXtf2DAAAAmElEQVR42mNgoBKw0lL6D8OUKcKhL6JqAxxj1Q8S3OXhA8fEWgIzvGHROTjGsARm+J2cAjhGtwSX76hiAYg+VzUHjtEtpsgCmOFv1hyBY1yWkBUHxFhAUSoi1gKYWqJSBTYxXHFAFQuICQKS8g45hpCaORlICWOSDcelkeyIJdYSultAseH4LKGa4dgMprrhlNYXFCffAQUAlt8j6131PdQAAAAASUVORK5CYII=" },
+  umbrella: { w: 21, h: 19, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAATCAYAAAB/TkaLAAAAmUlEQVR42mNgIACstJT+g3BE1Yb/MDYDuQBmQMOic2AMMhSGyTIc2TBshoIwSIwog5G9SoyhMIOxGo5sGLomQoZiNRzmVUKaelLciLIUbDB6BGCLEBAbZig2X6HzGZCTC8zlyHyYGMhQdDG8+tADGhsf3VBi9BFMFdgMpQiMGkpdQ2EGUs1QZAOp7lJyi7oEamF0gw0oxTCzABadY3bHnB0VAAAAAElFTkSuQmCC" },
+  flowers: { w: 13, h: 18, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAASCAYAAACAa1QyAAAAj0lEQVR42mNgwAGstJT+M5ACQBrerDnyn6BGmAKYBhhGFsfQcK5qzn9kDZ8utKBoRLEZpgGGsdmEYTNMMchkdI24bMZqEwjn9GTA2dj8CNeIrBCdjTU00RWj0ziDHyTRsqwORTGMj1MDsm0wjCyOGU91SQQxyRqxOhEkuDXVGyceQE1AgQRiMbpGA0IYphYAXWVdTQR/jXUAAAAASUVORK5CYII=" },
+  icecream: { w: 9, h: 16, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAQCAYAAADESFVDAAAAYElEQVR42mNggAIrLaX/b9YcgWMQnwEZoCvAUIhLAYpCEPHp+R2cGKwInwIYJk4RUdaBiFU1ITgxig9BAj0pbig0SlgRpQibQgwFRCtCVohTAUFFQMEEXBhdoQE6hskBANpNE25OU5qbAAAAAElFTkSuQmCC" },
+  beachball: { w: 13, h: 15, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAPCAYAAAA/I0V3AAAAe0lEQVR42mNgQAJWWkr/QfjT8ztwDBNjwAZAErs8fFA0wHBE1QZMjTAN+DShaETWgE0jTAOKRrI0oWtA1oiuAYbxasKFGXBJ/DqWhFsTerzANMAwuhw8IEjWBAt2bBrQNWKNYHya8CYlEEbWgDPtAQUTiMXoGg0IYZhaAEV3tMQ1dkPKAAAAAElFTkSuQmCC" },
+  watermelon: { w: 11, h: 10, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAKCAYAAABi8KSDAAAAS0lEQVR42mNgQANWWkr/d3n4/AfRDPgATCEM49SArBCdjddEdAzXgMtErDbgMxEdM3x6fuc/sRjsjJyeDIIY2d0JhDB6iBjgwjA1AHudrdyA6uE3AAAAAElFTkSuQmCC" },
+  books: { w: 21, h: 15, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAPCAYAAAALWoRrAAAAYElEQVR42mNggAIrLaX/m6Z1wfHWVG+iMUgvAzZAdUNBgtTAKAZOK0sgGyP7Dm4wzQylJsYZSV1T5pGFaWsoTby/qSLpP8UYPbJoYii1vU8TQ5FjP4FaGD3/G1CKYWYBAJ/4LKB1KwWFAAAAAElFTkSuQmCC" },
+  turkey: { w: 15, h: 13, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAANCAYAAAB2HjRBAAAAaElEQVR42mNgAAIrLaX/n57fAWMQmwELwKsGJHCoKwyMQWx0jCzHgMt0ZIXIGCbHgAvg0kiUrfg04jWAbM0ggTkpVkRjuAGkakQxABZ35GCwzV1T5pGMUZxOKkYOsARSMXqIGxCLYXoAbXRI7aKK+7EAAAAASUVORK5CYII=" },
 };
 /* PROPS:END */
 
@@ -170,12 +196,31 @@ const PROPS = {
  */
 const FOREGROUND_PROPS = new Set(["catbedRim"]);
 
+/**
+ * Props that belong to a single month. All of them stay mounted year round and
+ * are hidden with `opacity` — CSS decides which one shows, not React, exactly
+ * as the two window variants already work. Each name here matches a value in
+ * SEASONS above and a `.cw-prop-*` rule in the stylesheet.
+ */
+const SEASONAL_PROPS = new Set([
+  "hearts",
+  "balloons",
+  "umbrella",
+  "flowers",
+  "icecream",
+  "beachball",
+  "watermelon",
+  "books",
+  "pumpkin",
+  "turkey",
+]);
+
 const Prop = ({ name }) => {
   const p = PROPS[name];
   if (!p) return null;
   return (
     <div
-      className={`cw-prop cw-prop-${name}`}
+      className={`cw-prop cw-prop-${name}${SEASONAL_PROPS.has(name) ? " cw-seasonal" : ""}`}
       style={{
         backgroundImage: `url(${p.src})`,
         width: `${p.w}px`,
@@ -600,20 +645,42 @@ const CSS = `
 /* the rug lies flat ON the floor plane, so it sits well below the floor line
    that everything else stands on; the armchair sits on its right end */
 .cw-prop-rug         { left: 112px; bottom: 11px; }
-/* seasonal (October) - sits on the windowsill's right pane, clear of the
-   central mullion at x~116-118 */
-.cw-prop-pumpkin     { left: 118px; bottom: 36px; opacity: 0; }
-
 /* ---- seasonal decoration ----
    A third axis, independent of theme and activity: purely a calendar check,
-   no network involved. Most months show nothing at all. */
-[data-season="halloween"] .cw-prop-pumpkin { opacity: 1; }
-/* same treatment as the window it sits beside: no shadow in the light theme,
-   since it sits right at the room's daytime light source, but a normal
-   dark-theme drop-shadow like every other prop gets */
-[data-theme="dark"][data-season="halloween"] .cw-prop-pumpkin {
-  filter: drop-shadow(-2px 1px 1px rgba(0,0,0,0.50));
-}
+   no network involved. Exactly one of these is on screen in any given month,
+   which is why several share a spot - five sit on the windowsill and two
+   float on the wall above the armchair. */
+.cw-seasonal { opacity: 0; }
+
+/* On the sill. All rest on the same line: each carries 2px of contact shadow
+   below the art, and the sill's top surface is at y=40, so bottom:36 puts
+   every one of them on it regardless of height. */
+.cw-prop-turkey      { left: 109px; bottom: 36px; }
+.cw-prop-flowers     { left: 110px; bottom: 36px; }
+.cw-prop-watermelon  { left: 112px; bottom: 36px; }
+.cw-prop-icecream    { left: 114px; bottom: 36px; }
+.cw-prop-pumpkin     { left: 118px; bottom: 36px; }
+/* On the floor, left of the rug and clear of the window above. The ball needs
+   this side too: under the window it stands exactly as tall as the gap below
+   the sill, and touching the frame it reads as stuck to the glass. */
+.cw-prop-umbrella    { left: 78px;  bottom: 19px; }
+.cw-prop-books       { left: 84px;  bottom: 19px; }
+.cw-prop-beachball   { left: 86px;  bottom: 19px; }
+/* On the wall over the armchair, below the light string at y=74. The balloons
+   sit lower so their strings reach the chair back and read as tied to it. */
+.cw-prop-hearts      { left: 200px; bottom: 52px; }
+.cw-prop-balloons    { left: 200px; bottom: 46px; }
+
+[data-season="pumpkin"]    .cw-prop-pumpkin,
+[data-season="hearts"]     .cw-prop-hearts,
+[data-season="balloons"]   .cw-prop-balloons,
+[data-season="umbrella"]   .cw-prop-umbrella,
+[data-season="flowers"]    .cw-prop-flowers,
+[data-season="icecream"]   .cw-prop-icecream,
+[data-season="beachball"]  .cw-prop-beachball,
+[data-season="watermelon"] .cw-prop-watermelon,
+[data-season="books"]      .cw-prop-books,
+[data-season="turkey"]     .cw-prop-turkey    { opacity: 1; }
 
 /* Firelight. Unlike the lamp this is lit in BOTH themes - the fire is burning
    either way - just stronger after dark when there is less to compete with. */
@@ -630,7 +697,7 @@ const CSS = `
 }
 /* December: the same halo, but lit all day rather than only after dark -
    the string is switched on for the season, not just for the night */
-[data-season="holiday"] .cw-prop-lights {
+[data-season="lights"] .cw-prop-lights {
   filter: drop-shadow(0 0 2px rgba(242,208,132,0.55));
 }
 
@@ -698,6 +765,20 @@ const CSS = `
 [data-theme="dark"] .cw-prop-windowNight { filter: drop-shadow(-3px 2px 1px rgba(0,0,0,0.50)); }
 [data-theme="dark"] .cw-prop-bookcase    { filter: drop-shadow(-3px 2px 1px rgba(0,0,0,0.50)); }
 [data-theme="dark"] .cw-prop-armchair    { filter: drop-shadow(-4px 1px 1px rgba(0,0,0,0.55)); }
+
+/* The seasonal props follow the same rule as everything else: throw away from
+   the window by day, away from the fire after dark. The five on the sill get
+   no light-theme shadow at all, for the same reason the window does not -
+   they are sitting in the daylight source itself. */
+[data-theme="light"] .cw-prop-umbrella,
+[data-theme="light"] .cw-prop-books      { filter: drop-shadow(-2px 1px 1px rgba(28,20,14,0.40)); }
+[data-theme="light"] .cw-prop-beachball,
+[data-theme="light"] .cw-prop-hearts,
+[data-theme="light"] .cw-prop-balloons   { filter: drop-shadow(2px 1px 1px rgba(28,20,14,0.40)); }
+
+/* After dark the fire at x~277 is the dominant light and every seasonal prop
+   sits to its left, so they all throw the same way. */
+[data-theme="dark"] .cw-seasonal         { filter: drop-shadow(-2px 1px 1px rgba(0,0,0,0.50)); }
 
 /* After dark the character is always left of the fire, so its shadow never
    needs to flip - only the daytime walk crosses the window. */

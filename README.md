@@ -213,8 +213,7 @@ slot in the cycle:
 const r = document.querySelector('.cw-root');
 r.setAttribute('data-activity', 'evening');   // or morning/day/bedtime/night
 r.setAttribute('data-theme', 'dark');
-r.setAttribute('data-season', 'holiday');     // or halloween/frost - clear the
-                                               // attribute for no decoration
+r.setAttribute('data-season', 'pumpkin');     // any value from the table below
 document.querySelectorAll('.cw-sprite, .cw-actor').forEach(el =>
   el.getAnimations().forEach(a => { a.currentTime = 40000 * 0.30; a.pause(); }));
 ```
@@ -226,19 +225,49 @@ Note this only sticks until the next 60s refresh, which re-renders from real
 ## Seasonal decoration
 
 A third axis, independent of both theme and activity: purely a `Date` check,
-no network, no poller. Most months show nothing at all.
+no network, no poller. Every month has one.
 
-| Month | `data-season` | What changes |
+| Month | `data-season` | What appears |
 |---|---|---|
-| October | `halloween` | A pumpkin appears on the windowsill |
-| December | `holiday` | The ceiling string lights stay lit all day, not just after dark |
-| January | `frost` | Frost creeps in over the window's corners |
+| January | `frost` | Frost creeping in over the window's corners |
+| February | `hearts` | Three hearts on the wall over the armchair |
+| March | `balloons` | A bunch tied to the armchair |
+| April | `umbrella` | Stood open on the floor to dry |
+| May | `flowers` | A potted bunch on the windowsill |
+| June | `icecream` | A cone on the sill |
+| July | `beachball` | On the floor |
+| August | `watermelon` | A slice on the sill |
+| September | `books` | A pile on the floor, in the bookcase's own spine colours |
+| October | `pumpkin` | On the sill |
+| November | `turkey` | On a platter, cooling on the sill |
+| December | `lights` | The ceiling string stays lit all day, not just after dark |
 
-All three are plain CSS gated on the `data-season` attribute — see
-`seasonFor()` in `widget/claude-usage.jsx` for the month mapping, and
-`DEBUG_MONTH` right above `DEBUG_HOUR` for testing without waiting for the
-calendar. The pumpkin is the one piece of new art; it's drawn in
-`tools/propgen.mjs` like the rest of the scenery and regenerated the same way.
+Each season is named after **the thing that appears**, so the CSS is a flat 1:1
+mapping onto a `.cw-prop-*` class — or, for `frost` and `lights`, onto the one
+element that isn't a prop. Naming them for holidays instead would break that,
+and would put a culture-specific label on months like May that are only
+decorated for the season.
+
+Only ever one is on screen, which is why several share a spot: five sit on the
+windowsill, three on the floor, two on the wall above the armchair. The ten
+that are props stay mounted year round at `opacity: 0` and are switched on by
+`data-season` — CSS decides which shows, not React, exactly as the two window
+variants already work. See `SEASONS` and `SEASONAL_PROPS` in
+`widget/claude-usage.jsx`, and `DEBUG_MONTH` beside `DEBUG_HOUR` for testing
+without waiting for the calendar.
+
+The art is drawn in `tools/propgen.mjs` with the rest of the scenery and
+regenerated the same way. A few things that had to be learned the hard way at
+this size, all noted in the source:
+
+- **The turkey's drumsticks must splay.** Stood upright beside the body they
+  vanish into the silhouette and it reads as a loaf of bread.
+- **The flower stems must fan** from one point in the pot. Three parallel
+  stems of equal length read as a fence.
+- **The book pile needs its page-edges at alternating ends.** A light band
+  running the full width of every book turns the stack into a layer cake.
+- **The beach ball can't sit under the window.** It stands exactly as tall as
+  the gap below the sill, and touching the frame it reads as stuck to the glass.
 
 ## The character
 
@@ -319,9 +348,9 @@ A potted plant used to hold the right-hand corner and was dropped when the
 basket took that spot. `plant()` is deliberately still in `propgen.mjs` so it
 can be put back by uncommenting its line in the prop table.
 
-One prop is generated but not always shown: the [seasonal](#seasonal-decoration)
-pumpkin is always in `PROPS` and the DOM, same as every other prop, but sits at
-`opacity: 0` except in October — CSS decides visibility, not React.
+Ten of the props are generated but only shown for one month each — see
+[Seasonal decoration](#seasonal-decoration). They are always in `PROPS` and in
+the DOM like every other prop, just held at `opacity: 0` the rest of the year.
 
 The bookcase's forty-odd book spines are laid out pseudo-randomly from a
 **fixed seed**, not hand-placed. Too many to author by hand, and the fixed seed
@@ -333,12 +362,13 @@ node tools/propgen.mjs
 ```
 
 These are hand-authored in code rather than generated, because they are small
-regular shapes that are quicker to draw than to generate and then clean up. The
-(currently unused) plant is an ASCII grid, since an organic outline is awkward
-to express any other way; everything else is composed from
-rectangles. All of it is drawn at the same 1-art-pixel-per-output-pixel scale as
-the character, which is what keeps the stage looking like one set. Total cost is
-under 1 KB.
+regular shapes that are quicker to draw than to generate and then clean up —
+and at this size it is the only way they stay on-palette. The organic shapes
+(the unused plant, the pumpkin, the hearts, the ice cream, the watermelon) are
+ASCII grids, since an outline like that is awkward to express any other way;
+everything else is composed from rectangles and loops. All of it is drawn at the
+same 1-art-pixel-per-output-pixel scale as the character, which is what keeps
+the stage looking like one set. Total cost is about 4 KB for all twenty props.
 
 The window follows the **theme**, not the activity, so it agrees with the card
 around it: blue sky and sun in light, stars and a moon in dark. The lamp's warm

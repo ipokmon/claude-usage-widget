@@ -87,6 +87,17 @@ const C = {
   F: [250, 198, 98],   // flame core
   v: [84, 102, 90],    // armchair; muted green balances the terracotta and
   V: [110, 130, 116],  // orange already in the room
+  // Seasonal decorations only. Kept at the same muted saturation as the rest
+  // of the room - a pure #FF0000 heart beside this palette reads as a UI
+  // element rather than a piece of the set.
+  d: [186, 72, 76],    // red - hearts, watermelon flesh
+  D: [220, 108, 112],  // red highlight
+  h: [206, 122, 156],  // pink - blossom, balloon
+  H: [236, 172, 196],  // pink highlight
+  l: [88, 122, 176],   // blue - umbrella, beach ball
+  L: [128, 162, 206],  // blue highlight
+  t: [156, 100, 58],   // roast brown
+  T: [194, 138, 86],   // roast highlight
 };
 
 const mk = (w, h) => ({ width: w, height: h, data: Buffer.alloc(w * h * 4) });
@@ -167,6 +178,17 @@ function withDropShadow(img, { dx = 1, dy = 2, alpha = 64 } = {}) {
   return out;
 }
 
+/** Blit `src` onto `dst` at (ox, oy), skipping transparent source pixels. */
+function blit(dst, src, ox, oy) {
+  for (let y = 0; y < src.height; y++) {
+    for (let x = 0; x < src.width; x++) {
+      const i = (y * src.width + x) * 4;
+      if (src.data[i + 3] === 0) continue;
+      px(dst, ox + x, oy + y, [src.data[i], src.data[i + 1], src.data[i + 2]]);
+    }
+  }
+}
+
 /** ASCII grid -> image. Validates row lengths so a typo fails loudly. */
 function fromAscii(rows) {
   const w = rows[0].length;
@@ -216,24 +238,252 @@ const plant = () => fromAscii([
   '......kkkkkk......',
 ]);
 
+/* ------------------------------------------------- seasonal decorations --
+ *
+ * One per month; see seasonFor() in the widget for the mapping. Only ever one
+ * is on screen at a time, which is why several of them share a spot - five sit
+ * on the windowsill and two float on the wall above the armchair.
+ *
+ * These are authored here like the rest of the scenery. The AI sprite pipeline
+ * in spritegen.mjs is only for the two characters, and it exists mostly to
+ * undo defects in generated sheets; for shapes this small, drawing them
+ * directly is both quicker and the only way they stay on-palette.
+ */
+
 /*
- * Seasonal decoration: a pumpkin for the windowsill in October. Organic like
- * the plant, so authored the same way - an ASCII grid rather than rectangles.
- * Uses the flame colours (f/F) rather than the terracotta (p/P) used
- * elsewhere: terracotta reads brown at this size, flame orange reads as a
- * pumpkin. outline() (applied in BUILD) gives it the dark edge the other
- * organic shape (the plant) also needs.
+ * October. Organic like the plant, so authored the same way - an ASCII grid
+ * rather than rectangles. Uses the flame colours (f/F) rather than the
+ * terracotta (p/P) used elsewhere: terracotta reads brown at this size, flame
+ * orange reads as a pumpkin. outline() (applied in BUILD) gives it the dark
+ * edge the other organic shape (the plant) also needs.
  */
 const pumpkin = () => fromAscii([
   '....w....',
   '...www...',
-  '.FFFFFFF.',
-  'FFfFfFfFF',
-  'FfFFfFFfF',
-  'FFfFfFfFF',
-  '.FFFFFFF.',
-  '..FFFFF..',
+  '.fffffff.',
+  'fFpfffpff',
+  'fFpfffpff',
+  'ffpfffpff',
+  '.fffffff.',
+  '..fffff..',
 ]);
+
+const heart = () => fromAscii([
+  '.dd.dd.',
+  'dDDDDDd',
+  'dDDDDDd',
+  '.dDDDd.',
+  '..dDd..',
+  '...d...',
+]);
+
+/*
+ * February. Three copies of the same heart at staggered heights: at 7px across
+ * three *identical* hearts read as a cluster, where three drawn-differently
+ * ones just read as noise. 1px margin all round so outline() has somewhere to
+ * put the edge - it draws into a same-size canvas and silently clips.
+ */
+function hearts() {
+  const img = mk(24, 15);
+  for (const [x, y] of [[1, 8], [9, 1], [16, 7]]) blit(img, heart(), x, y);
+  return img;
+}
+
+/*
+ * The balloon silhouette, in a caller-chosen colour so one shape serves all
+ * three. The dark ring is baked in as C.k rather than left to outline(),
+ * because outline() would also fatten the strings into 3px cables.
+ */
+function balloonShape(dark, light) {
+  const img = mk(7, 8);
+  const rows = [
+    '..kkk..',
+    '.k###k.',
+    'k#***#k',
+    'k#***#k',
+    'k#***#k',
+    '.k###k.',
+    '..kkk..',
+    '...k...',
+  ];
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === 'k') px(img, x, y, C.k);
+    else if (ch === '#') px(img, x, y, dark);
+    else if (ch === '*') px(img, x, y, light);
+  }));
+  return img;
+}
+
+/*
+ * March. Strings are drawn first so the balloons paint over their own knots.
+ * The middle balloon is deliberately off the tie point's column: with its knot
+ * directly above the tie its string is a straight vertical line, and the
+ * cluster reads as two balloons on strings plus one on a stick.
+ */
+function balloons() {
+  const img = mk(24, 20);
+  const TIE_X = 12, TIE_Y = 18;
+  const set = [
+    { x: 1, y: 1, dark: C.d, light: C.D },
+    { x: 8, y: 3, dark: C.h, light: C.H },
+    { x: 16, y: 0, dark: C.l, light: C.L },
+  ];
+  for (const b of set) {
+    const kx = b.x + 3, ky = b.y + 8;          // where the knot sits
+    for (let y = ky; y <= TIE_Y; y++) {
+      const t = (y - ky) / (TIE_Y - ky);
+      px(img, Math.round(kx + (TIE_X - kx) * t), y, C.k);
+    }
+  }
+  for (const b of set) blit(img, balloonShape(b.dark, b.light), b.x, b.y);
+  return img;
+}
+
+/** April. Open and drying, which is far more legible than a furled one. */
+function umbrella() {
+  const img = mk(21, 17);
+  for (let y = 0; y < 6; y++) {                 // canopy
+    const half = Math.round((y / 5) * 9);
+    for (let x = 10 - half; x <= 10 + half; x++) {
+      px(img, x, y, Math.floor((x + 2) / 4) % 2 ? C.l : C.L);
+    }
+  }
+  // The rim dips between the ribs. That scallop is what says "umbrella"
+  // rather than "dome" once the shape is only 21px across.
+  for (const cx of [1, 5, 10, 15, 19]) {
+    rect(img, cx - 1, 6, 3, 1, C.l);
+    px(img, cx, 7, C.l);
+  }
+  rect(img, 10, 5, 1, 10, C.w);                 // shaft
+  px(img, 9, 14, C.w);                          // crook
+  rect(img, 8, 15, 3, 1, C.w);
+  return img;
+}
+
+/*
+ * May. Same terracotta pot as the plant, so they read as the same set.
+ * The stems fan out from a single point in the pot rather than running
+ * parallel - three vertical lines of equal length read as a fence, not a
+ * bunch. The blooms need the full 5px rosette for the same reason: a 3px one
+ * is just a dot on a stick.
+ */
+function flowers() {
+  const img = mk(13, 16);
+  const stem = (bx, by) => {
+    const steps = 11 - by;
+    for (let i = 0; i <= steps; i++) {
+      px(img, Math.round(6 + ((bx - 6) * i) / steps), 11 - i, C.g);
+    }
+  };
+  stem(2, 6); stem(6, 5); stem(10, 6);
+  px(img, 4, 9, C.G); px(img, 8, 9, C.G);       // leaves
+  const bloom = (cx, cy, petal) => {
+    rect(img, cx - 1, cy - 1, 3, 3, petal);
+    px(img, cx - 2, cy, petal); px(img, cx + 2, cy, petal);
+    px(img, cx, cy - 2, petal); px(img, cx, cy + 2, petal);
+    px(img, cx, cy, C.y);                       // warm centre
+  };
+  bloom(6, 3, C.H); bloom(2, 5, C.h); bloom(10, 5, C.H);
+  rect(img, 2, 11, 9, 1, C.P);                  // pot
+  rect(img, 3, 12, 7, 4, C.p);
+  rect(img, 3, 12, 7, 1, C.P);
+  return img;
+}
+
+/** June. The waffle lattice is what reads at this size, not the cone taper. */
+const icecream = () => fromAscii([
+  '...HHH...',
+  '..HHHHH..',
+  '.HHHHHHH.',
+  '.ccccccc.',
+  'ccccccccc',
+  'ccccccccc',
+  '.ccccccc.',
+  '.WWWWWWW.',
+  '..WwWwW..',
+  '..WwWwW..',
+  '...WwW...',
+  '...WwW...',
+  '....W....',
+  '....W....',
+]);
+
+/** July. Six wedges swept by angle - hand-placing them never looks round. */
+function beachball() {
+  const img = mk(13, 13);
+  const wedges = [C.d, C.c, C.l, C.c, C.F, C.c];
+  for (let y = 0; y < 13; y++) {
+    for (let x = 0; x < 13; x++) {
+      const dx = x - 6, dy = y - 6;
+      if (dx * dx + dy * dy > 37) continue;
+      const a = (Math.atan2(dy, dx) + Math.PI) / (Math.PI * 2);
+      px(img, x, y, wedges[Math.floor(a * 6) % 6]);
+    }
+  }
+  return img;
+}
+
+/** August. A wedge standing on its rind, seeds picked out in the outline dark. */
+const watermelon = () => fromAscii([
+  '.....d.....',
+  '....ddd....',
+  '...ddkdd...',
+  '..ddddddd..',
+  '.ddkdddkdd.',
+  'ddddddddddd',
+  'ccccccccccc',
+  '.ggggggggg.',
+]);
+
+/*
+ * September. Reuses the bookcase's three spine colours, so the pile reads as
+ * books pulled off that shelf rather than as unrelated blocks.
+ */
+function books() {
+  const img = mk(21, 13);
+  // `pages` is which end the leaves face. A full-width light band on every
+  // book turns the pile into a striped layer cake; a short block at
+  // alternating ends reads as books stacked facing different ways.
+  const layers = [
+    { x: 0, w: 20, c: C.r, pages: 'r' },
+    { x: 2, w: 17, c: C.R, pages: 'l' },
+    { x: 1, w: 18, c: C.m, pages: 'r' },
+    { x: 3, w: 14, c: C.p, pages: 'l' },
+  ];
+  let y = 12;
+  for (const L of layers) {
+    y -= 3;
+    rect(img, L.x, y, L.w, 3, L.c);
+    rect(img, L.pages === 'r' ? L.x + L.w - 3 : L.x, y, 3, 3, C.U);
+    rect(img, L.x, y + 2, L.w, 1, C.k);         // shadow line under each
+  }
+  return img;
+}
+
+/*
+ * November. On a platter, cooling on the sill - the classic cartoon staging.
+ * The drumsticks are drawn BEFORE the body and stand proud of it at the top,
+ * with a cream bone tip. Tucked against the body's side they disappear into
+ * the silhouette and the whole thing reads as a loaf of bread.
+ */
+function turkey() {
+  const img = mk(15, 11);
+  // Mostly the golden tone, with the darker brown kept to the bottom two rows
+  // as shading. Weighted the other way the bird is a dark lump: it is seen
+  // against the sky from the sill, not against the wall like everything else.
+  for (let y = 0; y < 6; y++) {                 // body dome
+    const half = 2 + Math.round((y / 5) * 4);
+    rect(img, 7 - half, y + 2, half * 2 + 1, 1, y < 4 ? C.T : C.t);
+  }
+  // Drumsticks rise in a V from the top of the bird with the bone tips out.
+  // Standing them upright BESIDE the body instead just reads as two posts on
+  // a slab - the splay is what makes them legs.
+  rect(img, 3, 1, 2, 1, C.T); rect(img, 2, 0, 2, 1, C.c);
+  rect(img, 10, 1, 2, 1, C.T); rect(img, 11, 0, 2, 1, C.c);
+  rect(img, 0, 8, 15, 1, C.c);                  // platter
+  rect(img, 1, 9, 13, 1, C.R);
+  return img;
+}
 
 /** Floor lamp. The shade stays cream; the warm spill at night is CSS. */
 function lamp() {
@@ -508,9 +758,20 @@ const BUILD = {
   // no contact shadow: the rim is the front of the same object, not a second
   // thing resting on the floor
   catbedRim: outline(catbedRim()),
-  // seasonal (October) - sits on the windowsill, so it gets the same
-  // contact-shadow treatment as anything else resting on a surface
-  pumpkin: withContactShadow(outline(pumpkin())),
+  // Seasonal, one per month. Anything resting on a surface (sill or floor)
+  // gets the same contact shadow as the permanent props; the two that float
+  // on the wall get neither, and `balloons` skips outline() as well since its
+  // dark ring is drawn in and outline() would fatten the strings.
+  pumpkin: withContactShadow(outline(pumpkin())),        // bottom -2
+  hearts: outline(hearts()),
+  balloons: balloons(),
+  umbrella: withContactShadow(outline(umbrella())),      // bottom -2
+  flowers: withContactShadow(outline(flowers())),        // bottom -2
+  icecream: withContactShadow(outline(icecream())),      // bottom -2
+  beachball: withContactShadow(outline(beachball())),    // bottom -2
+  watermelon: withContactShadow(outline(watermelon())),  // bottom -2
+  books: withContactShadow(outline(books())),            // bottom -2
+  turkey: withContactShadow(outline(turkey())),          // bottom -2
 };
 
 /* ------------------------------------------------------ write + inject */
