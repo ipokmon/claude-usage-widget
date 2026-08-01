@@ -258,6 +258,19 @@ variants already work. See `SEASONS` and `SEASONAL_PROPS` in
 `widget/claude-usage.jsx`, and `DEBUG_MONTH` beside `DEBUG_HOUR` for testing
 without waiting for the calendar.
 
+Adding or renaming a month means four places have to agree — the art in
+`tools/propgen.mjs`, `SEASONS`, `SEASONAL_PROPS`, and the CSS position and
+show rules — and one of them fails in a direction you won't notice: leave a prop
+out of `SEASONAL_PROPS` and nothing hides it, so it sits in the room every day
+of the year rather than going missing. Run:
+
+```bash
+node tools/check-seasons.mjs
+```
+
+It reads the real lists and the real CSS, prints a line per month, and exits
+non-zero if any of the four disagree.
+
 The art is drawn in `tools/propgen.mjs` with the rest of the scenery and
 regenerated the same way. A few things that had to be learned the hard way at
 this size, all noted in the source:
@@ -477,6 +490,7 @@ tools/spritegen.mjs        rabbit + cat pipeline; rewrites SPRITES and CAT block
 tools/propgen.mjs          scenery + seasonal props; rewrites the PROPS block
 tools/check-cat-rules.mjs  asserts the cat's movement rules against the CSS
 tools/check-sprite-coverage.mjs  asserts exactly one sprite is visible at all times
+tools/check-seasons.mjs    asserts each month's decoration is wired up in all four places
 tools/install-launchd.sh   generates + loads the poll job for THIS checkout
 sprite/*.png               rabbit source sheets, one per state (2x2 poses each)
 sprite/cat/sheet.png       cat source sheet (one 4x3 grid, all three states)
