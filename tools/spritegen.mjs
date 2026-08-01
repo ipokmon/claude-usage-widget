@@ -376,17 +376,17 @@ const JOBS = [
     marker: 'SPRITES',
     constName: 'SPRITES',
     sheets: [
-      { file: 'ChatGPT Image Jul 28, 2026, 12_13_10 PM (1).png', state: 'idle' },
-      { file: 'ChatGPT Image Jul 28, 2026, 12_13_10 PM (2).png', state: 'walk' },
-      { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (3).png', state: 'stretch' },
-      { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (4).png', state: 'coffee' },
+      { file: 'idle.png', state: 'idle' },
+      { file: 'walk.png', state: 'walk' },
+      { file: 'stretch.png', state: 'stretch' },
+      { file: 'coffee.png', state: 'coffee' },
       // Frames 0/1 of this sheet are plain front-facing idle with no desk; only
       // 2/3 actually show the character at the desk, so cycling all four would
       // teleport them in and out of the scene.
-      { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (5).png', state: 'work', use: [2, 3] },
-      { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (6).png', state: 'read' },
-      { file: 'ChatGPT Image Jul 28, 2026, 12_13_11 PM (7).png', state: 'yawn' },
-      { file: 'ChatGPT Image Jul 28, 2026, 12_13_12 PM (8).png', state: 'sleep' },
+      { file: 'work.png', state: 'work', use: [2, 3] },
+      { file: 'read.png', state: 'read' },
+      { file: 'yawn.png', state: 'yawn' },
+      { file: 'sleep.png', state: 'sleep' },
     ],
   },
   {
@@ -405,13 +405,13 @@ const JOBS = [
     sheets: [
       // One sheet, three states. Row 0 mixes two standing/trotting poses with
       // two lying ones, so walk takes only 0-1; rows 1 and 2 are clean runs.
-      { file: 'ChatGPT Image Jul 28, 2026, 08_05_20 PM.png', state: 'walk', use: [0, 1] },
+      { file: 'sheet.png', state: 'walk', use: [0, 1] },
       // Row 1 is nominally the sleep run, but frames 4 and 5 are a cat rising
       // with its rear in the air - 4 especially reads as standing up. Cycling
       // them makes the cat look like it keeps waking. Only 6 and 7 are properly
       // curled, and alternating those two reads as breathing.
-      { file: 'ChatGPT Image Jul 28, 2026, 08_05_20 PM.png', state: 'sleep', use: [6, 7] },
-      { file: 'ChatGPT Image Jul 28, 2026, 08_05_20 PM.png', state: 'clean', use: [8, 9, 10, 11] },
+      { file: 'sheet.png', state: 'sleep', use: [6, 7] },
+      { file: 'sheet.png', state: 'clean', use: [8, 9, 10, 11] },
     ],
   },
 ];

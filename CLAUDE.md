@@ -10,11 +10,19 @@ install and usage; this file covers what is easy to get wrong when editing.
 widget/claude-usage.jsx   the entire widget - markup, state machine, art, CSS
 tools/spritegen.mjs       character pipeline; REWRITES part of the widget (see below)
 tools/propgen.mjs         scenery pipeline; REWRITES part of the widget (see below)
+tools/install-launchd.sh  generates the launchd plist from the current checkout
 poller/                   data layer: poll.mjs, manual-entry.mjs, probe.mjs, lib.mjs
 config/config.json        gitignored; holds the claude.ai session cookie
 cache/usage.json          gitignored; the only thing the widget reads
-sprite/                   source sheets; sprite/out/ and sprite/out/props/ are generated
+sprite/                   source sheets, named per state; sprite/out/** is generated
 ```
+
+**Nothing in the repo may hardcode a home directory.** The widget's `PROJECT`
+constant is the single exception - Übersicht gives it nothing to infer the path
+from - and it is commented as an edit-me. The launchd plist is a `.template`
+with `__NODE__`/`__PROJECT__` placeholders filled in at install time; do not
+commit a resolved copy. This repo is public, and the previous hardcoded plist
+installed a job pointing at a path that existed on exactly one machine.
 
 ## Ground rules
 
@@ -48,9 +56,20 @@ deliberate, so the fallback still works when the scraper path is broken. Do not
 retrying; a failed poll is a normal, expected state that should just flip
 `stale: true` and keep the last good numbers.
 
-**Secrets.** `config/config.json` holds a live session cookie. It is gitignored;
-verify with `git check-ignore -v config/config.json` before committing. Log
-output is scrubbed by `redact()` in `poller/lib.mjs` — keep using it.
+**Secrets.** `config/config.json` holds a live session cookie — a bearer
+credential for the whole account, not just usage data. It is gitignored; verify
+with `git check-ignore -v config/config.json` before committing. It should be
+mode `600`, and `readConfig()` warns when it is not. Log output is scrubbed by
+`redact()` in `poller/lib.mjs` — keep using it, and note it now also masks
+UUIDs and emails because `probe.mjs` dumps a whole API response and that output
+gets pasted into bug reports.
+
+**The endpoint allowlist is load-bearing.** `assertSafeEndpoint()` in
+`poller/lib.mjs` restricts where the cookie may be sent to HTTPS on `claude.ai`
+or `anthropic.com`. `endpoint` is hand-pasted from DevTools, so it is the one
+config value likely to be copied from an untrusted source; without the check a
+single wrong hostname exfiltrates the session cookie every 10 minutes while the
+widget still shows green. Widen `ALLOWED_HOSTS` only for a real Anthropic host.
 
 ## Git workflow
 

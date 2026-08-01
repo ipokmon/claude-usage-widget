@@ -1,23 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  TEMPLATE - do not copy this file to ~/Library/LaunchAgents by hand.
+
+  __NODE__ and __PROJECT__ are substituted by tools/install-launchd.sh, which
+  reads them from your actual checkout. Hardcoding them here is what made the
+  old plist work on exactly one machine.
+-->
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.ivan.claude-usage-poller</string>
+  <string>com.claude-usage-poller</string>
 
   <!-- Absolute paths required: launchd runs with a minimal PATH. -->
   <key>ProgramArguments</key>
   <array>
-    <string>/opt/homebrew/bin/node</string>
-    <string>/Users/ivanwu/Desktop/claude/claudetoken widget/poller/poll.mjs</string>
+    <string>__NODE__</string>
+    <string>__PROJECT__/poller/poll.mjs</string>
   </array>
 
   <key>WorkingDirectory</key>
-  <string>/Users/ivanwu/Desktop/claude/claudetoken widget</string>
+  <string>__PROJECT__</string>
 
   <!-- 600s = 10 minutes. Deliberately conservative: this is an undocumented
        internal endpoint, and usage limits move slowly enough that polling
-       harder buys nothing but rate-limit risk. -->
+       harder buys nothing but rate-limit risk. This is the ONLY place the
+       interval is set. -->
   <key>StartInterval</key>
   <integer>600</integer>
 
@@ -25,8 +33,8 @@
   <true/>
 
   <key>StandardOutPath</key>
-  <string>/Users/ivanwu/Desktop/claude/claudetoken widget/poller.log</string>
+  <string>__PROJECT__/poller.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/ivanwu/Desktop/claude/claudetoken widget/poller.log</string>
+  <string>__PROJECT__/poller.log</string>
 </dict>
 </plist>
