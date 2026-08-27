@@ -284,8 +284,20 @@ mode is asymmetric:
 The third row is the one that bites. `.cw-seasonal` is what holds these at
 `opacity: 0`, and membership of that set is the only thing that applies it — a
 prop added to `PROPS` and given a position but left out of `SEASONAL_PROPS`
-becomes permanent scenery. There is no checker for this yet; verify a new month
-by scrubbing `data-season` rather than by reading the diff.
+becomes permanent scenery. The other three rows fail by showing nothing, which
+you notice; that one fails by showing something all year, which just looks like
+the room. All four are machine-checked — run it after touching any of them:
+
+```bash
+node tools/check-seasons.mjs
+```
+
+It reads the real sources (propgen's `BUILD`, the generated `PROPS` block, both
+widget lists, and the CSS rules themselves), so it cannot drift the way a second
+copy of the month list would. It also catches the inverse mistakes: `frost` or
+`lights` added to `SEASONAL_PROPS` (which would hide the ceiling string for
+eleven months), a name in the set that no month asks for, and a `BUILD` entry
+that predates the last `propgen` run.
 
 Only one is ever on screen, so they **share stations** rather than each getting
 their own spot: five on the windowsill (`bottom: 36px` puts every one of them on
@@ -371,9 +383,10 @@ fresher mid-session than the old fixed 10-minute interval, at the same or lower
 average request rate.
 
 The seasonal axis is complete: all twelve months are decorated, so there is no
-"undecorated month" case left to design for. What is *not* built is a checker
-for the four-place agreement described above — that invariant is currently
-manual, unlike the cat's rules, sprite coverage and the poll cadence.
+"undecorated month" case left to design for. The four-place agreement described
+above is now checked by `tools/check-seasons.mjs`, so all four of the repo's
+invariants — the cat's rules, sprite coverage, the seasonal wiring, and the poll
+cadence — are machine-verified rather than manual.
 
 **The Fable limit disappears from the payload when the plan lapses.** Cancelling
 Max removed the `weekly_scoped` entry entirely, which read as a `fieldMap` bug
