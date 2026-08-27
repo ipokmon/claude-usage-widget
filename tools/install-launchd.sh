@@ -29,11 +29,23 @@ if [ ! -f "$TEMPLATE" ]; then
   exit 1
 fi
 
+# StartInterval is how often poll.mjs RUNS; poll.mjs decides for itself whether
+# each run makes a request. Read the floor out of config.json so the cadence
+# lives in exactly one place - a plist holding its own copy is how the interval
+# silently disagreed with the config before.
+INTERVAL="$("$NODE" -e '
+  try {
+    const c = require(process.argv[1]);
+    const s = Number(c?.poll?.minSeconds);
+    process.stdout.write(String(Number.isFinite(s) && s >= 15 ? Math.round(s) : 60));
+  } catch { process.stdout.write("60"); }
+' "$PROJECT/config/config.json" 2>/dev/null || echo 60)"
+
 # The checkout path may contain spaces or & - substitute in awk, not sed, so we
 # do not have to reason about escaping the replacement text.
 mkdir -p "$HOME/Library/LaunchAgents"
-awk -v node="$NODE" -v project="$PROJECT" '
-  { gsub(/__NODE__/, node); gsub(/__PROJECT__/, project); print }
+awk -v node="$NODE" -v project="$PROJECT" -v interval="$INTERVAL" '
+  { gsub(/__NODE__/, node); gsub(/__PROJECT__/, project); gsub(/__INTERVAL__/, interval); print }
 ' "$TEMPLATE" > "$TARGET"
 
 # Retire the old per-user label if a previous install left it running.
@@ -51,8 +63,9 @@ launchctl unload "$TARGET" 2>/dev/null || true
 launchctl load "$TARGET"
 
 echo "Installed $TARGET"
-echo "  node:    $NODE"
-echo "  project: $PROJECT"
+echo "  node:     $NODE"
+echo "  project:  $PROJECT"
+echo "  tick:     ${INTERVAL}s (poll.mjs gates its own requests on top of this)"
 echo
 echo "Now set this line at the top of widget/claude-usage.jsx:"
 echo

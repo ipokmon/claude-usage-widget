@@ -8,7 +8,11 @@
 
   "orgId": "",
 
-  "_interval_note": "The poll interval is NOT set here. It is StartInterval in launchd/com.claude-usage-poller.plist.template (600s); re-run tools/install-launchd.sh after changing it.",
+  "_poll_help": "Adaptive cadence. 'minSeconds' is both the floor between fetches AND the launchd StartInterval that tools/install-launchd.sh writes into the plist - re-run that script after changing it. 'maxSeconds' is the ceiling the gap grows to while the numbers are not moving. poll.mjs fetches at minSeconds while usage is changing, doubles toward maxSeconds while it is not, and always fetches when a limit window has reset. The endpoint sends no ETag or Cache-Control, so there is no cheaper check than a full request - this is the only way to be fresher without being noisier.",
+  "poll": {
+    "minSeconds": 60,
+    "maxSeconds": 600
+  },
 
   "_fieldMap_help": "Maps the endpoint's JSON shape onto the widget's three metrics. 'pct' and 'resets_at' are dot/bracket paths into the response (e.g. 'five_hour.utilization' or 'limits[0].pct'). A bracket may also be a filter, 'limits[scope.model.display_name=Fable].percent', which finds the first array element whose nested field matches - use this instead of a fixed index for arrays whose order isn't guaranteed. 'scale' multiplies the raw value (use 100 if the API returns 0.0-1.0, use 1 if it already returns 0-100). 'invert' converts a REMAINING value into a USED percentage. Run 'node poller/probe.mjs' to dump the real response and get suggested paths.",
   "fieldMap": {

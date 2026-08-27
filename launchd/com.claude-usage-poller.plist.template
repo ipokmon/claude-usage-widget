@@ -22,12 +22,14 @@
   <key>WorkingDirectory</key>
   <string>__PROJECT__</string>
 
-  <!-- 600s = 10 minutes. Deliberately conservative: this is an undocumented
-       internal endpoint, and usage limits move slowly enough that polling
-       harder buys nothing but rate-limit risk. This is the ONLY place the
-       interval is set. -->
+  <!-- How often poll.mjs is RUN, not how often it fetches. The script gates
+       its own requests (see poller/poll.mjs) and most runs exit without
+       touching the network, which is what makes a tick this short affordable
+       against an undocumented endpoint. Substituted from `poll.minSeconds` in
+       config/config.json so the cadence has one source of truth - do not edit
+       the interval here. -->
   <key>StartInterval</key>
-  <integer>600</integer>
+  <integer>__INTERVAL__</integer>
 
   <key>RunAtLoad</key>
   <true/>
