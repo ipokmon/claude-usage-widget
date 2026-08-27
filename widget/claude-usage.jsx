@@ -11,9 +11,10 @@
 //
 //  All motion lives in the injected <style> block below as plain CSS
 //  animations. Nothing here computes animation-delay from the clock: Übersicht
-//  re-renders every 60s and React keeps the DOM nodes, so the CSS animations
-//  run continuously across refreshes. Feeding a fresh delay in on each render
-//  would make them visibly jump instead.
+//  re-renders on `refreshFrequency` and React keeps the DOM nodes, so the CSS
+//  animations run continuously across refreshes regardless of how short that
+//  tick is. Feeding a fresh delay in on each render would make them visibly
+//  jump instead.
 // ============================================================================
 
 // ---------------------------------------------------------------------------
@@ -30,7 +31,12 @@ const PROJECT = "/Users/ivanwu/Desktop/claude/claudetoken widget";
 // left no clue anywhere on the desktop.
 export const command = `cat "${PROJECT}/cache/usage.json" 2>/dev/null || echo '{"__nocache":true}'`;
 
-export const refreshFrequency = 60000;
+// The render tick, not the fetch tick. This only re-reads a ~1KB local file,
+// so the cost is nil, and halving it halves the tail latency between the poller
+// writing a new number and the desktop showing it. Note when debugging: a
+// hand-set data-* attribute on .cw-root now survives only ~30s, so use
+// DEBUG_HOUR / DEBUG_MONTH below for anything longer than a glance.
+export const refreshFrequency = 30000;
 
 // ---------------------------------------------------------------------------
 // Set to an hour 0-23 to force a time of day (e.g. 3 = night, 13 = day).
@@ -431,10 +437,24 @@ export const render = ({ output }) => {
               if (!m) return null;
               const pct = Math.max(0, Math.min(100, Number(m.pct) || 0));
               const reset = fmtReset(m.resets_at);
+              // The poll SUCCEEDED but this one metric vanished from the
+              // payload, so poll.mjs re-used the previous value. Without a mark
+              // that is indistinguishable from a live reading - which is what
+              // happened while the Fable limit was absent from the plan: a
+              // frozen bar, no stale badge, nothing to notice.
+              const held = Boolean(m.carried_over);
               return (
                 <div className="cw-metric" key={key}>
                   <div className="cw-metric-top">
                     <span className="cw-metric-label">{m.label || key}</span>
+                    {held && (
+                      <span
+                        className="cw-metric-held"
+                        title="Not in the last response — showing the previous value."
+                      >
+                        held
+                      </span>
+                    )}
                     {reset && <span className="cw-metric-reset">{reset}</span>}
                     <span className="cw-metric-pct">{pct}%</span>
                   </div>
@@ -442,6 +462,7 @@ export const render = ({ output }) => {
                     <div
                       className="cw-fill"
                       data-level={levelFor(pct)}
+                      data-held={held ? "true" : undefined}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -581,6 +602,25 @@ const CSS = `
 }
 .cw-fill[data-level="warn"] { background: #D9924A; }
 .cw-fill[data-level="crit"] { background: #C4553F; }
+
+/* A held bar is drawn as a hatch rather than a solid: at 5px tall a colour
+   change alone reads as another severity level, which is the opposite of the
+   point. The stripes say "this is not a live reading" at a glance. */
+.cw-metric-held {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  border: 1px solid var(--track);
+  border-radius: 3px; padding: 0 3px;
+}
+.cw-fill[data-held="true"] {
+  opacity: 0.55;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255,255,255,0.28) 0 2px,
+    rgba(255,255,255,0) 2px 4px
+  );
+}
 
 .cw-empty { font-size: 12px; color: var(--text-2); line-height: 1.5; padding: 6px 0 2px; }
 .cw-empty-hint { display: block; font-size: 11px; opacity: 0.85; }

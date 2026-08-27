@@ -61,8 +61,46 @@ deliberate, so the fallback still works when the scraper path is broken. Do not
 "refactor" the duplication away.
 
 **`poll.mjs` always exits 0.** launchd treats a non-zero exit as a failure worth
-retrying; a failed poll is a normal, expected state that should just flip
-`stale: true` and keep the last good numbers.
+retrying; a failed poll is a normal, expected state that should just keep the
+last good numbers.
+
+**launchd's `StartInterval` is a tick, not a poll interval.** It fires
+`poll.mjs` every `poll.minSeconds`; `poll.mjs` then decides whether to spend a
+request, and most runs exit before touching the network. That gate is the only
+reason a 60s tick is affordable against an undocumented endpoint — do not read
+the plist interval as the request rate.
+
+The cadence rules, and why each exists, are asserted by:
+
+```bash
+node tools/check-poll-cadence.mjs
+```
+
+It spawns the real `poll.mjs` with `fetch` stubbed and the cache, log and config
+paths redirected into a temp dir via `CLAUDE_USAGE_CACHE` / `CLAUDE_USAGE_LOG` /
+`CLAUDE_USAGE_CONFIG` — those env vars exist *only* for that, and nothing sets
+them in normal operation. Run it after touching the gate, the backoff, or the
+failure path.
+
+Three things in there are easy to "simplify" back into bugs:
+
+- **Stale is about consecutive failures, not age.** Three in a row, not one. A
+  laptop that slept or a wifi handover produces exactly one, and a badge that
+  flickers on those is one you stop reading. How *old* the data is, the footer
+  already says.
+- **Failures back off too**, so an expired cookie settles at `maxSeconds` rather
+  than retrying every tick forever.
+- **Unchanged polls log nothing.** The log is a change journal now; an entry per
+  poll buried the interesting lines and duplicated what `fetched_at` says. Every
+  line is timestamped — the absence of timestamps is what made the original
+  "how often does this actually change?" question unanswerable.
+
+**`carried_over` is load-bearing.** When one metric is missing from an otherwise
+good response, `poll.mjs` re-uses the previous value and sets this flag; the
+widget draws that bar hatched with a **HELD** chip. Without it the poll succeeds,
+no stale flag is set, and a frozen number is pixel-identical to a live one —
+which is exactly what happened while the Fable weekly limit was absent from the
+payload during a plan lapse.
 
 **Secrets.** `config/config.json` holds a live session cookie — a bearer
 credential for the whole account, not just usage data. It is gitignored; verify
@@ -190,7 +228,7 @@ node tools/check-cat-rules.mjs
 1. it only *traverses* while the character is standing still
 2. it does not traverse during every such window (bedtime and night it never
    moves at all; the others use one of the character's several still windows)
-3. its range (67px) is far shorter than the character's (142-220px)
+3. its range (103px) is far shorter than the character's (142-220px)
 
 Rule 1 holds by construction only because **each cat timeline shares its
 activity's duration** with the character's. Retime a character walk without
@@ -302,11 +340,18 @@ over a websocket on connect, so reload the page rather than touching the `.jsx`.
 
 Two things about that mirror, both learned by wasting time on them:
 
-- **Setting `data-*` by hand only lasts until the next 60s refresh**, which
-  re-renders from real `Date` and wipes it. For anything longer than a glance,
-  set `DEBUG_HOUR` / `DEBUG_MONTH` in the file instead.
+- **Setting `data-*` by hand only lasts until the next refresh** — 30s now, not
+  60 — which re-renders from real `Date` and wipes it. For anything longer than
+  a glance, set `DEBUG_HOUR` / `DEBUG_MONTH` in the file instead.
 - The page is empty for a moment after a reload while the websocket delivers
   the widget, so a devtools snippet run immediately finds no `.cw-root`.
+- **A tab that stays empty is not a broken widget.** Übersicht pushes widgets
+  only on websocket connect, and a hard/forced reload can leave the tab with the
+  container `<div id="claude-usage-jsx">` present but never filled — no error
+  card, no console message, indistinguishable from a widget rendering `null`.
+  Open a **new tab** rather than reloading the old one. Confirm the widget
+  itself is fine first by running its `command` by hand (`cat cache/usage.json`);
+  reverting the `.jsx` to chase a phantom regression is the trap here.
 
 To compare many states at once — twelve seasons in two themes, say — **clone
 `.cw-root`** into a plain container, set different `data-season`/`data-theme` on
@@ -320,10 +365,22 @@ the only way spacing and shadow-direction mistakes are actually visible.
 Live scrape works. All **three** bars render — session, weekly (all models),
 and weekly (Fable).
 
+Polling is adaptive (2026-08-27): launchd ticks every 60s, `poll.mjs` fetches
+between 60s and 10 min depending on whether the numbers are moving. Roughly 10x
+fresher mid-session than the old fixed 10-minute interval, at the same or lower
+average request rate.
+
 The seasonal axis is complete: all twelve months are decorated, so there is no
 "undecorated month" case left to design for. What is *not* built is a checker
 for the four-place agreement described above — that invariant is currently
-manual, unlike the cat's rules and sprite coverage.
+manual, unlike the cat's rules, sprite coverage and the poll cadence.
+
+**The Fable limit disappears from the payload when the plan lapses.** Cancelling
+Max removed the `weekly_scoped` entry entirely, which read as a `fieldMap` bug
+and was not one — the array simply had no such element, and matching by
+`display_name` correctly found nothing. It came back on reactivation
+(2026-08-27). This is what `carried_over` and the **HELD** chip are for; expect
+the same shape on any future lapse rather than re-debugging the lookup.
 
 The payload carries a `limits` array (easy to miss: it sits after the
 `seven_day_*` keys, and an early truncated capture hid it). The entry with

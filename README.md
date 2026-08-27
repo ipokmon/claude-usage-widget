@@ -147,9 +147,68 @@ widget stays clean.
 
 | Thing | Interval | Reasoning |
 |---|---|---|
-| Poller → endpoint | **10 min** | Undocumented internal endpoint. Usage limits move slowly; polling harder buys nothing and raises rate-limit/flagging risk. |
-| Widget → cache file | **60 s** | Just a local `cat`. Cheap, and keeps the "resets in…" countdowns honest. |
-| Character animation | continuous | Pure CSS, independent of both. |
+| launchd → `poll.mjs` | **60 s** | How often the script *runs*, not how often it fetches. Most runs exit without making a request. |
+| Poller → endpoint | **60 s – 10 min, adaptive** | Fetches at the floor while your usage is moving, doubles the gap toward the ceiling while it is not, and always fetches when a limit window resets. |
+| Widget → cache file | **30 s** | Just a local `cat` of a ~1 KB file. Cheap, and keeps the "resets in…" countdowns honest. |
+| Character animation | continuous | Pure CSS, independent of all of the above. |
+
+### Why adaptive rather than a shorter fixed interval
+
+A fixed interval is wrong in both directions at once. Measured over an early
+`poller.log`, **60% of polls returned numbers identical to the previous poll** —
+those requests bought nothing — while the ones that *did* matter, the 5-hour bar
+climbing during a working session, could be up to 10 minutes stale by the time
+they reached the desktop.
+
+The obvious fix, a conditional request, is not available: the endpoint returns
+**no `ETag`, no `Last-Modified` and no `Cache-Control`** (checked against the
+live response), so there is no cheap way to ask "has this changed?" — every
+check costs a full fetch. The only remaining lever is *when* to spend one.
+
+So `poll.mjs` gates itself:
+
+- values moved on the last fetch → fetch again at `minSeconds` (you are
+  mid-session, and that is when you actually look at the widget)
+- values did not move → double the gap, up to `maxSeconds`
+- a limit window has reset since the last fetch → fetch now regardless, because
+  the numbers being held are certainly wrong
+- otherwise → exit without touching the network
+
+Net effect: roughly **10× fresher while you are working, and fewer requests than
+the old fixed interval while you are not**. Both bounds live in
+`config/config.json`:
+
+```json
+"poll": { "minSeconds": 60, "maxSeconds": 600 }
+```
+
+`minSeconds` is also what `tools/install-launchd.sh` writes into the plist's
+`StartInterval`, so the cadence has one source of truth — **re-run that script
+after changing it.** To force a fetch immediately, ignoring the gate:
+
+```bash
+node poller/poll.mjs --now
+```
+
+### Stale, held, and the difference
+
+Three failure states, deliberately distinguished, because they want different
+reactions from you:
+
+| What you see | Means | Cause |
+|---|---|---|
+| **stale** badge | The poller has failed **three times running** | Expired cookie, moved endpoint, no network |
+| **HELD** chip on one bar | That poll *succeeded*, but this metric was missing from the response, so the previous value is being re-shown | The limit is not on your plan right now |
+| footer "synced · 2h ago" | Nothing failed; the machine was asleep or the backoff is wide | Normal |
+
+The stale badge deliberately does **not** flip on a single failure. A sleeping
+laptop or a wifi handover produces one, and a badge that flickers on those is a
+badge you learn to ignore. Age is the footer's job, not the badge's.
+
+The **HELD** chip exists because a carried-over value is otherwise
+indistinguishable from a live one — the poll succeeded, so there is no stale
+flag either. When the Fable weekly limit vanished from the payload during a plan
+lapse, that bar sat frozen for days looking perfectly healthy.
 
 ## Time-of-day behaviour
 
@@ -458,8 +517,10 @@ Read this before filing a bug against yourself.
    `manual-entry.mjs`.
 2. **Session cookies expire.** Expect to re-extract yours periodically. Symptom:
    persistent stale dot + `HTTP 401` in `poller.log`.
-3. **Polling an internal endpoint is not a supported use case.** 10 minutes is
-   deliberately conservative. Don't lower it.
+3. **Polling an internal endpoint is not a supported use case.** The adaptive
+   cadence keeps the *average* request rate at or below the old fixed 10-minute
+   one, which is the number that matters — don't lower `minSeconds` below 60s
+   just because the gate makes it feel free.
 4. **`fieldMap` is a guess until you verify it.** If percentages look wrong
    (inverted, or 100× off), you've got `invert` or `scale` wrong — not a bug in
    the poller.
@@ -489,7 +550,8 @@ poller/manual-entry.mjs    fallback; self-contained, no network, no shared code
 poller/lib.mjs             shared helpers for the scraper path only
 config/config.example.json template — copy to config.json (gitignored)
 cache/usage.json           last-known-good data (gitignored)
-launchd/*.plist.template   the 10-minute poll job; filled in by install-launchd.sh
+launchd/*.plist.template   the poll job; interval + paths filled in by install-launchd.sh
+tools/check-poll-cadence.mjs  asserts the backoff, stale and held rules
 ```
 
 ## License
