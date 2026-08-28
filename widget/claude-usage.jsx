@@ -417,15 +417,15 @@ export const render = ({ output }) => {
                   : "No usage data yet."}
               <span className="cw-empty-hint">
                 {noCache ? (
-                  <>
+                  <span>
                     Check <code>PROJECT</code> at the top of{" "}
                     <code>claude-usage.jsx</code> points at your checkout.
-                  </>
+                  </span>
                 ) : (
-                  <>
+                  <span>
                     Run <code>node poller/poll.mjs</code> — or{" "}
                     <code>manual-entry.mjs</code> to enter it by hand.
-                  </>
+                  </span>
                 )}
               </span>
             </div>

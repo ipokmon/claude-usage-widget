@@ -165,6 +165,25 @@ inside the 56px frame box, and `.cw-floor` sits at `bottom: 21px`, so
 `.cw-actor` is pinned to `bottom: 19px`. Change one and the character floats or
 sinks. Verify padding with the lowest-opaque-row check rather than by eye.
 
+## No JSX fragments
+
+**Never use `<>` / `</>` in the widget.** Übersicht's JSX transform routes normal
+tags through its own pragma, but the fragment shorthand compiles to
+`React.Fragment`, and `React` is not a variable in the widget's scope. The result
+is a `Can't find variable: React` error card on the desktop. Use a real wrapper
+element instead — `<span>` inside inline text, `<div>` elsewhere.
+
+This is nastier than it sounds because it fails **only on the branch that uses
+it**. The two fragments that caused it lived in the no-data empty state, so the
+widget rendered perfectly for weeks and then crashed at the one moment it was
+supposed to explain itself — a missing or unreadable `cache/usage.json`. Neither
+the checkers nor the backtick check catches this; the mirror does not either,
+unless you force the branch. Grep before committing:
+
+```bash
+grep -n "<>\|</>" widget/claude-usage.jsx
+```
+
 ## The stylesheet is a template literal
 
 `const CSS = ` … `` is one big JS template literal, so **a stray backtick or
