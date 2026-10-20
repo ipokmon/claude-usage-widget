@@ -1,6 +1,6 @@
 # STATUS: claude-usage-widget
 
-**State:** shipped (live), main at abba21e
+**State:** shipped (live), main at 08b4e09 (battery mode)
 **Last session:** 2026-10-20 | **Last QA:** PASS WITH ISSUES (2026-10-20, issues fixed)
 
 ## Working (verified)
