@@ -230,5 +230,50 @@ check(
 );
 rmSync(dir, { recursive: true, force: true });
 
+// --- tool bubble wiring ------------------------------------------------------
+// Every icon the widget can ask for must exist in the generated TOOLS block,
+// or <ToolBubble> silently renders nothing for that tool.
+console.log("tool bubbles");
+const widgetSrc = readFileSync(join(ROOT, "widget", "claude-usage.jsx"), "utf8");
+const block = (start) => widgetSrc.slice(widgetSrc.indexOf(start), widgetSrc.indexOf("};", widgetSrc.indexOf(start)));
+const iconKeys = new Set([...block("const TOOL_ICONS = {").matchAll(/^  (\w+): \{ w:/gm)].map((m) => m[1]));
+const wanted = new Set([...block("const TOOL_ICON_FOR = {").matchAll(/: "(\w+)"/g)].map((m) => m[1]));
+check("the fallback bubble exists", iconKeys.has("other"), [...iconKeys].join());
+const missing = [...wanted].filter((k) => !iconKeys.has(k));
+check("every mapped tool has bubble art", wanted.size > 0 && missing.length === 0, `missing: ${missing.join()}`);
+const unused = [...iconKeys].filter((k) => k !== "other" && !wanted.has(k));
+check("no bubble art is unreachable", unused.length === 0, `unused: ${unused.join()}`);
+
+const propgenSrc = readFileSync(join(ROOT, "tools", "propgen.mjs"), "utf8");
+const artStart = propgenSrc.indexOf("const TOOL_ICON_ART = {");
+const artKeys = new Set(
+  [...propgenSrc.slice(artStart, propgenSrc.indexOf("\n};", artStart)).matchAll(/^  (\w+): \[/gm)].map((m) => m[1])
+);
+check(
+  "TOOLS block keys match propgen's TOOL_ICON_ART (art changes need a propgen re-run)",
+  artKeys.size === iconKeys.size && [...artKeys].every((k) => iconKeys.has(k)),
+  `art: ${[...artKeys]} block: ${[...iconKeys]}`
+);
+
+// Stage bounds: the bubble rides the actor, so its far corner at the actor's
+// furthest translateX must stay inside the 350px stage, and its top inside
+// the 92px-tall stage (actor box top sits at 92 - 19 - 56 = 17).
+const px = (re) => Number(widgetSrc.match(re)?.[1]);
+const bubbleLeft = px(/\.cw-bubble \{[^}]*left: (-?\d+)px/);
+const bubbleTop = px(/\.cw-bubble \{[^}]*top: (-?\d+)px/);
+// The character's walks only: cw-<activity>-move, never the cat's cw-cat-*.
+// Each block runs from its header to the first "}" alone on a line.
+const moveBlocks = [...widgetSrc.matchAll(/@keyframes cw-(?!cat-)\w+-move \{\n([\s\S]*?)\n\}/g)].map((m) => m[1]);
+const maxX = Math.max(...moveBlocks.flatMap((b) => [...b.matchAll(/translateX\((-?\d+)px\)/g)].map((m) => Number(m[1]))));
+const bubbleArt = [...block("const TOOL_ICONS = {").matchAll(/\{ w: (\d+), h: (\d+)/g)].map((m) => [Number(m[1]), Number(m[2])]);
+const bw = Math.max(...bubbleArt.map((d) => d[0]));
+check(
+  "bounds inputs were all found (a missed regex must fail, not pass)",
+  [bubbleLeft, bubbleTop, maxX, bw].every(Number.isFinite) && moveBlocks.length >= 4,
+  JSON.stringify({ bubbleLeft, bubbleTop, maxX, bw, moveBlocks: moveBlocks.length })
+);
+check("bubble stays inside the stage on the right", maxX + bubbleLeft + bw <= 350, `${maxX}+${bubbleLeft}+${bw}`);
+check("bubble stays inside the stage at the top", 17 + bubbleTop >= 0, `top ${17 + bubbleTop}`);
+
 console.log(failed ? `\n${failed} check(s) FAILED` : "\nall stats rules hold");
 process.exit(failed ? 1 : 0);

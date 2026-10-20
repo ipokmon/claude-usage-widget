@@ -10,7 +10,7 @@
 
 ## In progress
 - PRs for Fable removal and usage stats. launchd runs this working tree, so both are already live on the desktop.
-- Rabbit literally holding the top tool: not built. Needs new sprite art per tool per pose; text stat ships instead.
+- Tool thought bubble over the rabbit (branch `tool-icon`, stacked on `usage-stats`): shows the 7-day top tool; hidden at night and when stats are stale.
 
 ## Known issues
 | Sev | Issue | Since |
@@ -19,15 +19,16 @@
 ## Blocked on / needs CEO
 - Merge the remove-fable-bar PR.
 - Merge the usage-stats PR.
-- Decide whether the rabbit should visually show the top tool (art work, see In progress).
+- Merge the tool-icon PR (after #5 and #6).
 
 ## Mocked or stubbed (must be replaced before ship)
 - none
 
 ## Next 3 actions
 1. Merge PRs once approved.
-2. If wanted: a small tool icon prop near the rabbit (propgen) as a cheaper stand-in for "holding".
+2. Glance at the bubble in daytime on the real desktop (only verified in the mirror; it is hidden at night).
 
 ## Session log (newest first, 1-2 lines each)
+- 2026-10-19: added tool thought bubble (7 icons, zero-overlap placement found by pixel sweep).
 - 2026-10-19: added pace, streak, top tool, peak hour (transcript scanner with per-file index; symlink-safe).
 - 2026-10-19: removed weekly (Fable) bar; fixed PROJECT path after the move off ~/Desktop.
