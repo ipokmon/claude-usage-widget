@@ -16,9 +16,10 @@ widget/claude-usage.jsx   the entire widget - markup, state machine, art, CSS
 tools/spritegen.mjs       character pipeline; REWRITES part of the widget (see below)
 tools/propgen.mjs         scenery pipeline; REWRITES part of the widget (see below)
 tools/install-launchd.sh  generates the launchd plist from the current checkout
-poller/                   data layer: poll.mjs, manual-entry.mjs, probe.mjs, lib.mjs
+poller/                   data layer: poll.mjs, manual-entry.mjs, probe.mjs, lib.mjs,
+                          stats.mjs (transcript scan) + stats-lib.mjs (pure formulas)
 config/config.json        gitignored; holds the claude.ai session cookie
-cache/usage.json          gitignored; the only thing the widget reads
+cache/usage.json          gitignored; the widget reads this and cache/stats.json
 sprite/                   source sheets, named per state; sprite/out/** is generated
 ```
 
@@ -391,9 +392,40 @@ stylesheet is global once the widget has rendered, so every clone styles itself
 correctly. That turns 24 screenshot round-trips into one, and side-by-side is
 the only way spacing and shadow-direction mistakes are actually visible.
 
+## Derived stats (2026-10-19)
+
+Pace, streak, top tool and peak hour. Definitions are in README; formulas in
+`poller/stats-lib.mjs` (pure, `now` passed in), checked by:
+
+```bash
+node tools/check-stats.mjs
+```
+
+Things that will bite:
+
+- **Never follow symlinks in `~/.claude/projects`.** The workspace move left
+  `-Users-ivanwu-Desktop-claude*` links to the real folders; following them
+  found 319 files instead of 135 and doubled every count.
+- **Transcripts are pruned by Claude Code**, so history has a floor
+  (`first_complete_day`, the day after the oldest surviving file's mtime). A
+  streak reaching it renders `N+d`; a window reaching past it is `partial`.
+  Do not "fix" this by extending the window.
+- **Dedupe by id, not by line.** One reply is several lines (one per content
+  block) sharing `message.id`; tool calls dedupe on `tool_use.id`. `<synthetic>`
+  model lines are client-made and skipped.
+- **Pace is computed by the poller, not the widget**, and only for a live
+  weekly reading: a held bar shows no pace. The window comes from the payload
+  (`window_start` in fieldMap), never an assumed 7 days.
+- The widget command now prints usage.json, a `@@CW_STATS@@` line, then
+  stats.json. A missing stats file shows dashes; usage rendering is unaffected.
+- `check-poll-cadence.mjs` sets `CLAUDE_PROJECTS_DIR` to an empty temp dir,
+  because poll.mjs runs the stats scan too. Keep it that way, or the check reads
+  your real transcripts.
+
 ## Current state
 
-Live scrape works. Two bars render: session and weekly (all models). The
+Live scrape works. Two bars render, session and weekly (all models), plus the
+pace line and the stats row described above. The
 weekly (Fable) bar was removed 2026-10-19 at Ivan's request (model no longer
 used). The notes below on the Fable `limits` entry stay because the entry is
 still in the payload and the filter syntax is how you would map it again.

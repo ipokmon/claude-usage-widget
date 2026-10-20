@@ -26,7 +26,9 @@
       "pct": "",
       "resets_at": "",
       "scale": 100,
-      "invert": false
+      "invert": false,
+      "_window_start_help": "Optional, weekly only: when the window opened, for the pace projection. On the claude.ai payload this is 'seven_day_breakdown.window_started_at'. Leave blank and the pace line reads 'Pace: n/a'.",
+      "window_start": ""
     }
   }
 }

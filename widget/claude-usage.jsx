@@ -29,7 +29,13 @@ const PROJECT = "/Users/ivanwu/claude/agents/claude-usage-widget";
 // empty output, which rendered as the ordinary "no usage data yet" state — so
 // a wrong PROJECT above looked exactly like a poller that had not run yet, and
 // left no clue anywhere on the desktop.
-export const command = `cat "${PROJECT}/cache/usage.json" 2>/dev/null || echo '{"__nocache":true}'`;
+//
+// stats.json (streak, top tool, peak hour) rides along after a separator line.
+// It is optional: a missing file prints null and the stats row says so.
+const STATS_SEPARATOR = "@@CW_STATS@@";
+export const command =
+  `cat "${PROJECT}/cache/usage.json" 2>/dev/null || echo '{"__nocache":true}'; ` +
+  `echo; echo '${STATS_SEPARATOR}'; cat "${PROJECT}/cache/stats.json" 2>/dev/null || echo null`;
 
 // The render tick, not the fetch tick. This only re-reads a ~1KB local file,
 // so the cost is nil, and halving it halves the tail latency between the poller
@@ -151,6 +157,112 @@ function fmtAgo(iso) {
   const h = Math.floor(mins / 60);
   if (h < 24) return `${h}h ago`;
   return `${Math.floor(h / 24)}d ago`;
+}
+
+/** 21 -> "9pm". */
+function fmtHour(h) {
+  if (typeof h !== "number") return null;
+  const suffix = h < 12 ? "am" : "pm";
+  return `${h % 12 === 0 ? 12 : h % 12}${suffix}`;
+}
+
+/** "Thu 3pm" - when the pace line crosses 100%. */
+function fmtWhen(iso) {
+  const t = new Date(iso ?? "");
+  if (Number.isNaN(t.getTime())) return null;
+  const day = t.toLocaleDateString("en-US", { weekday: "short" });
+  return `${day} ${fmtHour(t.getHours())}`;
+}
+
+/**
+ * Pace line under the weekly bar. Computed by the poller (poller/stats-lib.mjs
+ * paceFor); this only words it. A held bar gets no pace - its projection was
+ * made from a reading that is no longer live.
+ */
+function PaceLine({ pace, held }) {
+  if (!pace || held) return null;
+  if (pace.status === "at_limit") return <div className="cw-pace" data-level="over">Weekly limit reached</div>;
+  if (pace.status === "too_early") {
+    return <div className="cw-pace">Pace shows after the first day of the week</div>;
+  }
+  if (pace.status !== "ok") return <div className="cw-pace">Pace: n/a</div>;
+  if (pace.limit_at) {
+    return (
+      <div className="cw-pace" data-level="over">
+        On pace to hit 100% by {fmtWhen(pace.limit_at)}
+      </div>
+    );
+  }
+  return <div className="cw-pace">On pace for ~{pace.projected_pct}% by reset</div>;
+}
+
+const STATS_STALE_MINUTES = 30;
+
+/** One stat cell: big value, small label. `value` null renders a dash. */
+function Stat({ value, label, title }) {
+  return (
+    <div className="cw-stat" title={title}>
+      <span className="cw-stat-value">{value ?? "—"}</span>
+      <span className="cw-stat-label">{label}</span>
+    </div>
+  );
+}
+
+/**
+ * Streak / top tool / peak hour, from stats.json. All three are this Mac's
+ * Claude Code only, which the tooltips say. "partial" means the window reaches
+ * past the oldest transcript Claude Code has kept.
+ */
+function StatsRow({ stats }) {
+  const scope = "From this Mac's Claude Code transcripts.";
+  if (!stats) {
+    return (
+      <div className="cw-stats" title={`${scope} Run: node poller/stats.mjs`}>
+        <Stat value={null} label="streak" />
+        <Stat value={null} label="top tool" />
+        <Stat value={null} label="peak hour" />
+      </div>
+    );
+  }
+  const st = stats.streak;
+  const tool = stats.top_tool;
+  const peak = stats.peak_hour;
+  const partial = (x) => (x?.partial ? " · partial" : "");
+  const err = stats.last_error ? `\n${stats.last_error}` : "";
+  // Status words only; what to say when a stat is missing entirely.
+  const absent = (x, insufficientMsg) =>
+    x?.status === "insufficient" ? insufficientMsg : "Stats unavailable.";
+  // The poller refreshes these every 10 minutes; much older means it stopped.
+  const ageMin = (Date.now() - Date.parse(stats.computed_at ?? "")) / 60000;
+  const stale = !(ageMin < STATS_STALE_MINUTES);
+  const staleNote = stale ? `\nNot refreshed for ${Number.isFinite(ageMin) ? Math.round(ageMin) + " min" : "a while"}.` : "";
+  return (
+    <div className="cw-stats" data-stale={stale ? "true" : undefined}>
+      <Stat
+        value={st?.status === "ok" ? `${st.days}${st.capped ? "+" : ""}d` : null}
+        label={`${st?.active_today === false && st?.days > 0 ? "streak · not yet today" : "streak"}${partial(st)}`}
+        title={`Consecutive days with Claude Code activity.${st?.capped ? " Older transcripts are deleted, so it may be longer." : ""}\n${scope}${err}${staleNote}`}
+      />
+      <Stat
+        value={tool?.status === "ok" ? tool.display_name : null}
+        label={`top tool${tool?.window_days ? ` · ${tool.window_days}d` : ""}${partial(tool)}`}
+        title={`${
+          tool?.status === "ok"
+            ? `${tool.name}: ${tool.count} of ${tool.total} tool calls in the last ${tool.window_days} days.`
+            : absent(tool, "No tool calls in the window.")
+        }\n${scope}${err}${staleNote}`}
+      />
+      <Stat
+        value={peak?.status === "ok" ? fmtHour(peak.hour) : null}
+        label={`peak hour${peak?.window_days ? ` · ${peak.window_days}d` : ""}${partial(peak)}`}
+        title={`${
+          peak?.status === "ok"
+            ? `${peak.count} of ${peak.sample} Claude replies in the last ${peak.window_days} days landed in this hour.`
+            : absent(peak, `Too few replies to call a peak (${peak?.sample}).`)
+        }\n${scope}${err}${staleNote}`}
+      />
+    </div>
+  );
 }
 
 /** Bar colour ramps within the brand family as usage climbs. */
@@ -371,13 +483,22 @@ export const render = ({ output }) => {
 
   let cache = null;
   let parseError = false;
-  const raw = (output || "").trim();
+  const [usageRaw = "", statsRaw = ""] = (output || "").split(STATS_SEPARATOR);
+  const raw = usageRaw.trim();
   if (raw) {
     try {
       cache = JSON.parse(raw);
     } catch {
       parseError = true;
     }
+  }
+  // An unreadable stats file is the same as none: the row shows dashes and its
+  // tooltip says how to regenerate it. Usage parsing is unaffected either way.
+  let stats = null;
+  try {
+    stats = JSON.parse(statsRaw.trim() || "null");
+  } catch {
+    stats = null;
   }
 
   const data = cache?.data ?? null;
@@ -466,10 +587,13 @@ export const render = ({ output }) => {
                       style={{ width: `${pct}%` }}
                     />
                   </div>
+                  <PaceLine pace={m.pace} held={held} />
                 </div>
               );
             })}
         </div>
+
+        {hasData && <StatsRow stats={stats} />}
 
         {/* ---- character stage: kept visually separate from the data ---- */}
         <div className="cw-stage">
@@ -620,6 +744,39 @@ const CSS = `
     rgba(255,255,255,0.28) 0 2px,
     rgba(255,255,255,0) 2px 4px
   );
+}
+
+.cw-pace {
+  margin-top: 4px;
+  font-size: 10.5px; color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.cw-pace[data-level="over"] { color: #D9924A; font-weight: 500; }
+
+/* Three equal cells with hairline dividers: reads as one strip of trivia, kept
+   quieter than the bars above it, which are the part that matters. */
+.cw-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  margin: 10px 16px 0;
+  border-top: 1px solid var(--track);
+  padding-top: 7px;
+}
+.cw-stat {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 0 8px;
+  border-left: 1px solid var(--track);
+  min-width: 0;
+}
+.cw-stats[data-stale="true"] { opacity: 0.5; }
+.cw-stat:first-child { padding-left: 0; border-left: 0; }
+.cw-stat-value {
+  font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cw-stat-label {
+  font-size: 9.5px; color: var(--text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 .cw-empty { font-size: 12px; color: var(--text-2); line-height: 1.5; padding: 6px 0 2px; }

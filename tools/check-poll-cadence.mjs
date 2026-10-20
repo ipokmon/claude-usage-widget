@@ -29,7 +29,7 @@
 //      marked `carried_over`, which is what the widget draws as "held".
 
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, readFileSync, rmSync, chmodSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, chmodSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -40,6 +40,10 @@ const CACHE = join(dir, "usage.json");
 const LOG = join(dir, "poller.log");
 const STUB = join(dir, "stub.mjs");
 const CONFIG = join(dir, "config.json");
+// poll.mjs also runs the transcript stats; an empty folder keeps this check
+// from reading the real ~/.claude/projects.
+const PROJECTS = join(dir, "projects");
+mkdirSync(PROJECTS);
 
 // A config with the shipped defaults and a deliberately fake-but-allowed
 // endpoint: `fetch` is stubbed, so it is never actually called.
@@ -51,7 +55,12 @@ writeFileSync(
     poll: { minSeconds: 60, maxSeconds: 600 },
     fieldMap: {
       session: { pct: "five_hour.utilization", resets_at: "five_hour.resets_at", scale: 1 },
-      weekly: { pct: "seven_day.utilization", resets_at: "seven_day.resets_at", scale: 1 },
+      weekly: {
+        pct: "seven_day.utilization",
+        resets_at: "seven_day.resets_at",
+        window_start: "seven_day_breakdown.window_started_at",
+        scale: 1,
+      },
     },
   })
 );
@@ -70,7 +79,12 @@ globalThis.fetch = async () => {
   process.env.STUB_HIT_FILE && (await import("node:fs")).writeFileSync(process.env.STUB_HIT_FILE, "hit");
   if (mode === "netfail") throw new TypeError("fetch failed");
   const body = { five_hour: { utilization: pct, resets_at: "2099-01-01T00:00:00Z" } };
-  if (mode !== "noweekly") body.seven_day = { utilization: 2, resets_at: "2099-01-01T00:00:00Z" };
+  if (mode !== "noweekly") {
+    // A week centred on now, so the pace projection is exactly double.
+    const day = 86400000;
+    body.seven_day = { utilization: 2, resets_at: new Date(Date.now() + 3.5 * day).toISOString() };
+    body.seven_day_breakdown = { window_started_at: new Date(Date.now() - 3.5 * day).toISOString() };
+  }
   return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
 };
 `
@@ -91,6 +105,7 @@ function poll({ pct = 10, mode = "ok", args = [] } = {}) {
         CLAUDE_USAGE_CACHE: CACHE,
         CLAUDE_USAGE_LOG: LOG,
         CLAUDE_USAGE_CONFIG: CONFIG,
+        CLAUDE_PROJECTS_DIR: PROJECTS,
         STUB_MODE: mode,
         SESSION_PCT: String(pct),
         STUB_HIT_FILE: HIT,
@@ -195,6 +210,15 @@ check("the other metrics still update", r.cache.data.session.pct === 43);
 expireGate();
 r = poll({ pct: 44 });
 check("the mark clears when the metric comes back", r.cache.data.weekly?.carried_over === undefined);
+
+// --- 8. pace ----------------------------------------------------------------
+check(
+  "weekly pace projects from the payload's own window (2% at half-time -> 4%)",
+  r.cache.data.weekly?.pace?.status === "ok" && r.cache.data.weekly.pace.projected_pct === 4,
+  JSON.stringify(r.cache.data.weekly?.pace)
+);
+check("the session metric gets no pace", r.cache.data.session.pace === undefined);
+check("stats ran against the empty projects dir", JSON.parse(readFileSync(join(dir, "stats.json"), "utf8")).scanned?.files === 0);
 
 rmSync(dir, { recursive: true, force: true });
 

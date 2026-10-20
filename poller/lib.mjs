@@ -213,10 +213,17 @@ export function applyFieldMap(payload, spec) {
   pct = Math.max(0, Math.min(100, Math.round(pct)));
 
   const resets = spec.resets_at ? getPath(payload, spec.resets_at) : null;
-  return {
+  const mapped = {
     pct,
     resets_at: resets != null ? String(resets) : null,
   };
+  // Optional: when the window opened. Only the weekly metric maps it, for the
+  // pace projection; a metric without it gets no key rather than a null one.
+  if (spec.window_start) {
+    const start = getPath(payload, spec.window_start);
+    mapped.window_start = start != null ? String(start) : null;
+  }
+  return mapped;
 }
 
 export function readCache() {
