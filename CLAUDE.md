@@ -393,8 +393,10 @@ the only way spacing and shadow-direction mistakes are actually visible.
 
 ## Current state
 
-Live scrape works. All **three** bars render — session, weekly (all models),
-and weekly (Fable).
+Live scrape works. Two bars render: session and weekly (all models). The
+weekly (Fable) bar was removed 2026-10-19 at Ivan's request (model no longer
+used). The notes below on the Fable `limits` entry stay because the entry is
+still in the payload and the filter syntax is how you would map it again.
 
 Polling is adaptive (2026-08-27): launchd ticks every 60s, `poll.mjs` fetches
 between 60s and 10 min depending on whether the numbers are moving. Roughly 10x
@@ -422,7 +424,7 @@ weekly Fable limit. It started at 0% with `is_active: false` on 2026-07-28
 was reading a nonzero percent with `is_active` still `false` — usage accrues
 before Anthropic flips the limit "active".
 
-`config/config.json`'s `weekly_fable.pct` is mapped to that entry's `percent`,
+`config/config.json`'s `weekly_fable.pct` was mapped to that entry's `percent`,
 matched on `scope.model.display_name` rather than a fixed index like
 `limits[2]`, since nothing guarantees the array order. This match-by-field
 lookup is a small addition to `getPath` in `poller/lib.mjs` — see the

@@ -9,7 +9,6 @@ redecorates itself every month.
 │  Claude Usage            ● stale│
 │  5-hour limit   resets in 2h 24m│  42%
 │  Weekly (all models)            │  13%
-│  Weekly (Fable)                 │   3%
 │ ┌─────────────────────────────┐ │
 │ │  ╻    ╭─╮      ▤        ⬛  ♣ │ │  <- character stage
 │ │ ═╹════╰─╯══▬▬▬══════════════ │ │
@@ -18,11 +17,11 @@ redecorates itself every month.
 └─────────────────────────────────┘
 ```
 
-It renders one bar per metric present in the cache — currently all three:
-5-hour, weekly (all models), and weekly (Fable). The Fable limit lives inside
-the payload's `limits` array, matched by `scope.model.display_name` rather
-than a fixed index, since nothing guarantees the array's order — see
-[Known-fragile points](#️-known-fragile-points).
+It renders one bar per metric present in the cache: 5-hour and weekly (all
+models). A third bar, weekly (Fable), was removed on 2026-10-19 because the
+model is no longer in use; the payload still carries that limit in its
+`limits` array if it is ever wanted back (see the filter-bracket syntax under
+setup step 6).
 
 The payload contains **no token counts** of any kind, only percentages, reset
 times and credit amounts.
@@ -80,7 +79,7 @@ launchd (every 10 min)
 
 4. **Seed some data** so the widget has something to show:
    ```bash
-   node poller/manual-entry.mjs 42 61 12
+   node poller/manual-entry.mjs 42 61
    ```
 
 5. **Configure the live scraper** — see below — then install the poll job. The
@@ -134,7 +133,7 @@ Works with the scraper completely broken, and shares no code with it:
 
 ```bash
 node poller/manual-entry.mjs           # prompts for each value
-node poller/manual-entry.mjs 42 61 12  # or pass them directly
+node poller/manual-entry.mjs 42 61  # or pass them directly
 ```
 
 **If you want to run manual-only, don't load the launchd job.** The poller flags

@@ -124,7 +124,7 @@ async function main() {
     return;
   }
 
-  // Map the raw payload onto our three metrics.
+  // Map the raw payload onto our metrics.
   const data = {};
   const missing = [];
   for (const key of METRICS) {

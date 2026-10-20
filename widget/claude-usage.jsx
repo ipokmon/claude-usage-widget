@@ -23,7 +23,7 @@
 // installed as a symlink, so neither a relative path nor __dirname resolves to
 // anything useful. `tools/install-launchd.sh` prints the line to paste here.
 // ---------------------------------------------------------------------------
-const PROJECT = "/Users/ivanwu/Desktop/claude/claudetoken widget";
+const PROJECT = "/Users/ivanwu/claude/agents/claude-usage-widget";
 
 // A missing cache file is REPORTED, not swallowed. The previous `|| true` gave
 // empty output, which rendered as the ordinary "no usage data yet" state — so
@@ -160,7 +160,7 @@ function levelFor(pct) {
   return "ok";
 }
 
-const METRIC_ORDER = ["session", "weekly", "weekly_fable"];
+const METRIC_ORDER = ["session", "weekly"];
 
 // ---------------------------------------------------------------------------
 // Scenery

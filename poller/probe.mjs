@@ -12,7 +12,7 @@ import { readConfig, fetchUsage, resolveEndpoint, redact } from "./lib.mjs";
 const PCT_HINT = /(utiliz|usage|used|remaining|percent|pct|ratio|limit|quota)/i;
 const TIME_HINT = /(reset|refresh|expire|renew|until|next)/i;
 
-/** Walk the payload and collect leaf paths that smell like our three metrics. */
+/** Walk the payload and collect leaf paths that smell like our metrics. */
 function suggest(node, path = "", out = { pct: [], time: [] }, depth = 0) {
   if (depth > 8 || node == null) return out;
 
