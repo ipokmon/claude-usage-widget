@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 //
-// FALLBACK data path: type the three percentages in by hand.
+// FALLBACK data path: type the percentages in by hand.
 //
 // This file is INTENTIONALLY self-contained - it imports nothing from lib.mjs
 // and never touches the network. If the scraper breaks completely (endpoint
 // moved, cookie dead, payload reshaped), this still works. Keep it that way.
 //
 //   Usage:  node poller/manual-entry.mjs
-//     or:   node poller/manual-entry.mjs 42 61 12
+//     or:   node poller/manual-entry.mjs 42 61
 
 import { readFileSync, writeFileSync, renameSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -21,7 +21,6 @@ const CACHE_PATH = join(ROOT, "cache", "usage.json");
 const FIELDS = [
   ["session", "5-hour limit"],
   ["weekly", "Weekly (all models)"],
-  ["weekly_fable", "Weekly (Fable)"],
 ];
 
 function readCache() {
@@ -46,11 +45,11 @@ function clamp(n) {
 const prev = readCache();
 const data = {};
 
-// Non-interactive mode: three numbers as arguments.
+// Non-interactive mode: one number per field as arguments.
 const args = argv.slice(2).filter((a) => a !== "");
 if (args.length) {
-  if (args.length !== 3) {
-    console.error("Usage: node poller/manual-entry.mjs <5hour%> <weekly%> <fable%>");
+  if (args.length !== FIELDS.length) {
+    console.error("Usage: node poller/manual-entry.mjs <5hour%> <weekly%>");
     process.exit(1);
   }
   FIELDS.forEach(([key, label], i) => {

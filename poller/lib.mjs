@@ -25,12 +25,11 @@ export const CONFIG_PATH =
 export const CACHE_PATH =
   process.env.CLAUDE_USAGE_CACHE || join(ROOT, "cache", "usage.json");
 
-export const METRICS = ["session", "weekly", "weekly_fable"];
+export const METRICS = ["session", "weekly"];
 
 export const LABELS = {
   session: "5-hour limit",
   weekly: "Weekly (all models)",
-  weekly_fable: "Weekly (Fable)",
 };
 
 /**

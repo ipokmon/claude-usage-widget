@@ -160,7 +160,7 @@ function levelFor(pct) {
   return "ok";
 }
 
-const METRIC_ORDER = ["session", "weekly", "weekly_fable"];
+const METRIC_ORDER = ["session", "weekly"];
 
 // ---------------------------------------------------------------------------
 // Scenery

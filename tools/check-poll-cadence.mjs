@@ -52,11 +52,6 @@ writeFileSync(
     fieldMap: {
       session: { pct: "five_hour.utilization", resets_at: "five_hour.resets_at", scale: 1 },
       weekly: { pct: "seven_day.utilization", resets_at: "seven_day.resets_at", scale: 1 },
-      weekly_fable: {
-        pct: "limits[scope.model.display_name=Fable].percent",
-        resets_at: "limits[scope.model.display_name=Fable].resets_at",
-        scale: 1,
-      },
     },
   })
 );
@@ -74,15 +69,9 @@ globalThis.fetch = async () => {
   globalThis.__fetched = true;
   process.env.STUB_HIT_FILE && (await import("node:fs")).writeFileSync(process.env.STUB_HIT_FILE, "hit");
   if (mode === "netfail") throw new TypeError("fetch failed");
-  const limits = [];
-  if (mode !== "nofable") {
-    limits.push({ kind: "weekly_scoped", scope: { model: { display_name: "Fable" } }, percent: 5, resets_at: null });
-  }
-  return new Response(JSON.stringify({
-    five_hour: { utilization: pct, resets_at: "2099-01-01T00:00:00Z" },
-    seven_day: { utilization: 2, resets_at: "2099-01-01T00:00:00Z" },
-    limits,
-  }), { status: 200, headers: { "content-type": "application/json" } });
+  const body = { five_hour: { utilization: pct, resets_at: "2099-01-01T00:00:00Z" } };
+  if (mode !== "noweekly") body.seven_day = { utilization: 2, resets_at: "2099-01-01T00:00:00Z" };
+  return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
 };
 `
 );
@@ -196,16 +185,16 @@ check("recovery clears stale and the failure count", r.cache.stale === false && 
 
 // --- 7. carried-over metric ------------------------------------------------
 expireGate();
-r = poll({ pct: 43, mode: "nofable" });
+r = poll({ pct: 43, mode: "noweekly" });
 check(
   "a metric missing from the response is carried over and marked held",
-  r.cache.data.weekly_fable?.carried_over === true && r.cache.data.weekly_fable?.pct === 5,
-  JSON.stringify(r.cache.data.weekly_fable)
+  r.cache.data.weekly?.carried_over === true && r.cache.data.weekly?.pct === 2,
+  JSON.stringify(r.cache.data.weekly)
 );
 check("the other metrics still update", r.cache.data.session.pct === 43);
 expireGate();
 r = poll({ pct: 44 });
-check("the mark clears when the metric comes back", r.cache.data.weekly_fable?.carried_over === undefined);
+check("the mark clears when the metric comes back", r.cache.data.weekly?.carried_over === undefined);
 
 rmSync(dir, { recursive: true, force: true });
 
