@@ -198,6 +198,15 @@ function PaceLine({ pace, held }) {
 
 const STATS_STALE_MINUTES = 30;
 
+function statsAgeMinutes(stats) {
+  return (Date.now() - Date.parse(stats?.computed_at ?? "")) / 60000;
+}
+
+/** The poller refreshes stats every 10 minutes; much older means it stopped. */
+function statsStale(stats) {
+  return !(statsAgeMinutes(stats) < STATS_STALE_MINUTES);
+}
+
 /** One stat cell: big value, small label. `value` null renders a dash. */
 function Stat({ value, label, title }) {
   return (
@@ -232,9 +241,8 @@ function StatsRow({ stats }) {
   // Status words only; what to say when a stat is missing entirely.
   const absent = (x, insufficientMsg) =>
     x?.status === "insufficient" ? insufficientMsg : "Stats unavailable.";
-  // The poller refreshes these every 10 minutes; much older means it stopped.
-  const ageMin = (Date.now() - Date.parse(stats.computed_at ?? "")) / 60000;
-  const stale = !(ageMin < STATS_STALE_MINUTES);
+  const ageMin = statsAgeMinutes(stats);
+  const stale = statsStale(stats);
   const staleNote = stale ? `\nNot refreshed for ${Number.isFinite(ageMin) ? Math.round(ageMin) + " min" : "a while"}.` : "";
   return (
     <div className="cw-stats" data-stale={stale ? "true" : undefined}>
@@ -452,8 +460,61 @@ const CatActor = () => (
   </div>
 );
 
-const Actor = () => (
+// ---------------------------------------------------------------------------
+// Tool bubble
+//
+// What the character is thinking about: the week's most-used Claude Code tool
+// (stats.json top_tool), drawn by tools/propgen.mjs into the block below.
+// ---------------------------------------------------------------------------
+/* TOOLS:BEGIN */
+const TOOL_ICONS = {
+  bash: { w: 13, h: 17, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAARCAYAAAAG/yacAAAAWElEQVR42mNgQAJWWkr/cWEGbAAk8en5HZwYQyMhDRgakTXgcx6KRnSBlmV1pGvCpZEom0A0DBNlE0HnkRV6ZMcTRSkCpyShJESyRpI1MJACYE4jSyMp6gFPKUeJ94f78gAAAABJRU5ErkJggg==" },
+  edit: { w: 13, h: 17, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAARCAYAAAAG/yacAAAAaElEQVR42mNgQAJWWkr/cWEGbAAk8en5HZwYQyM+Deeq5oAxika8NlxoQdEE14hTE1ADHKM7E6smHBpwalpVE4JTA15NYI2EQhGmkarBjlUDRSkCpyShJESyRpI1MJACkIObZI2kqAcAeriAH9zM+1IAAAAASUVORK5CYII=" },
+  read: { w: 13, h: 17, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAARCAYAAAAG/yacAAAAaElEQVR42mNgQAJWWkr/cWEGbAAk8en5HZwYQyOyhq2p3lgxikZkDSA2SMG5uiQUDNME14hLE8wvJGki2SZcfsKr6c2HHxgYIxTRNWLDBIOdqHiiKEXglCSUhEjWSLIGBlIAzuCktk0ALZpOLMit4eQAAAAASUVORK5CYII=" },
+  write: { w: 13, h: 17, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAARCAYAAAAG/yacAAAAZUlEQVR42mNgQAJWWkr/cWEGbAAk8en5HZwYQyNMQ9eUeRgYq0ZkG0CK3nz4Acc4NeLThKyZKE0ty+pI0wTSAMPUs4lQ6CEHBs5gJzqeKEoROCUJJSGSNZKsgYEUAHMaWRpJUQ8AG0lzuPJH3KYAAAAASUVORK5CYII=" },
+  search: { w: 13, h: 17, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAARCAYAAAAG/yacAAAAZklEQVR42mNgQAJWWkr/cWEGbAAk8en5HZwYQyOyBmTTcWpE19Cw6Nz/eftvgDFOjeiaYBpoqwndT6tqQojThIxBmtA1Yg0MfBrxBjtR8URRisApSSgJkayRZA0MpACY08jSSIp6AHVkaAos8PWVAAAAAElFTkSuQmCC" },
+  web: { w: 13, h: 17, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAARCAYAAAAG/yacAAAAXUlEQVR42mNgQAJWWkr/cWEGbAAk8en5HZwYQyO6hoiqDXCMVSM2DQ2LzqHQGBqRNcEUImtC14hVEy5MXZuI9hNZoUd2PFGUInBKEkpCJGskWQMDKQDmNLI0kqIeAGfKZfN/k0H8AAAAAElFTkSuQmCC" },
+  other: { w: 13, h: 17, src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAARCAYAAAAG/yacAAAAXUlEQVR42mNgQAJWWkr/cWEGbAAk8en5HZwYQyM2DV1T5uHWiK4BpBgdY2jEpgnZLwQ1wUyGicE0IWukjk1E+4ms0CM7nihKETglCSUhkjWSrIGBFIAc+yRrJEU9AOsBaD5bSXGwAAAAAElFTkSuQmCC" },
+};
+/* TOOLS:END */
+
+/** Claude Code tool name -> bubble art. Anything unlisted is a gear. */
+const TOOL_ICON_FOR = {
+  Bash: "bash",
+  Edit: "edit",
+  MultiEdit: "edit",
+  NotebookEdit: "edit",
+  Read: "read",
+  Write: "write",
+  Grep: "search",
+  Glob: "search",
+  WebFetch: "web",
+  WebSearch: "web",
+};
+
+/**
+ * Sits in .cw-actor, so it travels with the character and takes its cast
+ * shadow, but OUTSIDE .cw-flip, so the bubble stays up-right of the head
+ * instead of mirroring to the far side on every turn.
+ */
+const ToolBubble = ({ tool, stale }) => {
+  // Stale stats dim in the row; a thought is either current or not there.
+  if (tool?.status !== "ok" || stale) return null;
+  const key = Object.hasOwn(TOOL_ICON_FOR, tool.name) ? TOOL_ICON_FOR[tool.name] : "other";
+  const art = TOOL_ICONS[key];
+  if (!art) return null;
+  return (
+    <div
+      className="cw-bubble"
+      title={`Most-used tool${tool.window_days ? `, last ${tool.window_days} days` : ""}: ${tool.display_name ?? tool.name}${tool.partial ? " (partial record)" : ""}`}
+      style={{ backgroundImage: `url(${art.src})`, width: `${art.w}px`, height: `${art.h}px` }}
+    />
+  );
+};
+
+const Actor = ({ tool, stale }) => (
   <div className="cw-actor">
+    <ToolBubble tool={tool} stale={stale} />
     <div className="cw-flip">
     {Object.entries(SPRITES).map(([state, s]) => (
       <div className={`cw-sprite cw-s-${state}`} key={state}>
@@ -603,7 +664,7 @@ export const render = ({ output }) => {
             <CatActor />
             {/* basket rim occludes the sleeping cat - see FOREGROUND_PROPS */}
             <Prop name="catbedRim" />
-            <Actor />
+            <Actor tool={stats?.top_tool} stale={statsStale(stats)} />
           </div>
         </div>
 
@@ -946,6 +1007,23 @@ const CSS = `
    so a scaleX(-1) on the element carrying the shadow would mirror the shadow
    with it and the character would light from the wrong side mid-walk. */
 .cw-flip { position: absolute; inset: 0; }
+
+/* Tool thought bubble. 42/-10 is the closest spot to the head that touches
+   no sprite pixel in any frame of any upright pose, either facing - found by
+   sweeping every offset on a canvas. The raised-arms stretch frame is what
+   pushes it this high; at 38/-4 the tail sat on the right ear. It drifts in
+   and out rather than staying up: a permanent bubble on a walking character
+   reads as a badge pinned to it. Hidden at night - the sleep sprite's own
+   "z" bubble owns that corner - and when stats are stale. */
+.cw-bubble {
+  position: absolute; left: 42px; top: -10px; z-index: 2;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  opacity: 0;
+  animation: cw-bubble 14s steps(1) infinite;
+}
+@keyframes cw-bubble { 0%{opacity:0} 36%{opacity:1} 86%{opacity:0} }
+[data-activity="night"] .cw-bubble { display: none; }
 .cw-sprite { position: absolute; inset: 0; opacity: 0; }
 
 /* ---- cast shadows ----

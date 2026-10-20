@@ -23,3 +23,18 @@ Round 2 (re-verify): PASS WITH ISSUES. All MEDs confirmed fixed by re-running re
 - keep-previous-parse path untested -> **fixed**: added check.
 - symlink guard itself not pinned (Dirent already excludes links) -> accepted.
 Not tested by QA: real Übersicht render (verified separately in the mirror), DST on streak/peak, Claude Code's mtime pruning assumption.
+
+## 2026-10-19 | tool thought bubble | PASS WITH ISSUES
+
+Round 1: PASS WITH ISSUES, 8/8 criteria verified (propgen deterministic, PROPS byte-identical, bubble never scenery, null/fallback safe, no mirroring, night hidden, in-stage geometry, sprite coverage intact).
+- MED tail covered the ear (idle 19px, stretch 31px, yawn 19px overlap) -> **fixed**: offset 42/-10 found by sweeping every offset against all upright frames both facings; QA's own PNG decode confirms 0 overlap.
+- MED tooltip said "this week" and ignored staleness/partial -> **fixed**: "last N days", partial note, hidden when stats are stale (shared statsStale()).
+- LOW prototype-key lookup -> **fixed** (Object.hasOwn). LOW raw MCP name in title -> **fixed** (display_name).
+- LOW tail dots fused -> improved (blank rows added); outlines still touch diagonally, **accepted** as style (more spacing would grow the art and void the verified offset).
+- LOW tests -> **fixed**: TOOLS/art key parity and stage-bounds checks.
+
+Round 2: PASS WITH ISSUES. Remaining LOWs:
+- bounds check read the cat's 294px park, not the actor, and could pass silently -> **fixed**: limited to cw-*-move (non-cat) blocks (max 250), fails if any input is missing.
+- "matches" check compares keys only -> renamed to say so.
+- title "last undefined days" -> **fixed** guard.
+Not tested by QA: real Übersicht pixels; verified separately via mirror clones at 2x in day/morning/evening.

@@ -774,6 +774,120 @@ const BUILD = {
   turkey: withContactShadow(outline(turkey())),          // bottom -2
 };
 
+/* ---------------------------------------------------------- tool bubbles */
+
+/*
+ * Thought bubbles over the character, one per family of Claude Code tool:
+ * whichever was used most this week is what the rabbit is thinking about.
+ * Same language as the "z" bubble baked into the sleep sprite - cream, dark
+ * outline, tail dots trailing down-left to the head - so it reads as part of
+ * the character, not a UI badge stuck on it.
+ *
+ * Icons are 7x7 because that is the smallest a ">_" or a pencil survives at
+ * 1x. Each is drawn on its own palette rather than in cream, which would
+ * vanish into the bubble.
+ */
+const TOOL_ICON_ART = {
+  bash: [ // terminal prompt
+    '.......',
+    'kkkkkkk',
+    'kGkkkkk',
+    'kkGkkkk',
+    'kGkGGGk',
+    'kkkkkkk',
+    '.......',
+  ],
+  edit: [ // pencil, eraser up
+    '.....hh',
+    '....yhh',
+    '...yyy.',
+    '..yyy..',
+    '.Wyy...',
+    '.WW....',
+    'k......',
+  ],
+  read: [ // closed book: terracotta cover, title label, cream page edge.
+    // An open book at 7px read as a pair of eyes, then as a barcode.
+    '.pppppp',
+    'kpPPPPp',
+    'kpPkkPp',
+    'kpPPPPp',
+    'kpppppp',
+    'kpsssss',
+    '.kkkkkk',
+  ],
+  write: [ // new file: page, folded corner, green plus
+    'RRRRR..',
+    'RsssRR.',
+    'RsssssR',
+    'RssGssR',
+    'RsGGGsR',
+    'RssGssR',
+    'RRRRRRR',
+  ],
+  search: [ // magnifier: Grep, Glob
+    '.kkk...',
+    'kLBBk..',
+    'kBBBk..',
+    'kBBBk..',
+    '.kkkW..',
+    '....WW.',
+    '.....WW',
+  ],
+  web: [ // globe: WebFetch, WebSearch
+    '..lll..',
+    '.lLlLl.',
+    'lLLlLLl',
+    'lllllll',
+    'lLLlLLl',
+    '.lLlLl.',
+    '..lll..',
+  ],
+  other: [ // gear: everything else, MCP tools included
+    '...R...',
+    '.RRRRR.',
+    '.RkkkR.',
+    'RRk.kRR',
+    '.RkkkR.',
+    '.RRRRR.',
+    '...R...',
+  ],
+};
+
+/**
+ * Cream cloud, 11x9, with two tail dots below-left; icon centred in it. The
+ * blank rows matter: outline() rings each dot, and with one gap the rings fuse
+ * into a single attached tail instead of separate trailing dots.
+ */
+function toolBubble(iconRows) {
+  const body = fromAscii([
+    '..ccccccc..',
+    '.ccccccccc.',
+    'ccccccccccc',
+    'ccccccccccc',
+    'ccccccccccc',
+    'ccccccccccc',
+    'ccccccccccc',
+    '.ccccccccc.',
+    '..ccccccc..',
+    '...........',
+    '...........',
+    '.cc........',
+    '...........',
+    '...........',
+    'c..........',
+  ]);
+  blit(body, fromAscii(iconRows), 2, 1);
+  // 1px margin so outline() has room on every side (it draws same-size).
+  const padded = mk(body.width + 2, body.height + 2);
+  blit(padded, body, 1, 1);
+  return outline(padded);
+}
+
+const TOOL_BUILD = Object.fromEntries(
+  Object.entries(TOOL_ICON_ART).map(([name, rows]) => [name, toolBubble(rows)])
+);
+
 /* ------------------------------------------------------ write + inject */
 
 mkdirSync(OUT, { recursive: true });
@@ -802,4 +916,28 @@ if (a < 0 || b < 0) {
   src = src.slice(0, a) + BEGIN + '\nconst PROPS = {\n' + body + '\n};\n' + src.slice(b);
   writeFileSync(WIDGET, src);
   console.log(`injected ${Object.keys(uris).length} props into widget/claude-usage.jsx`);
+}
+
+// Tool bubbles get their own block: <Scenery> renders every key of PROPS, so
+// putting them there would stand seven bubbles in the room at 0,0.
+mkdirSync(join(OUT, 'tools'), { recursive: true });
+const toolUris = {};
+for (const [name, img] of Object.entries(TOOL_BUILD)) {
+  const png = encodePNG(img);
+  writeFileSync(join(OUT, 'tools', `${name}.png`), png);
+  toolUris[name] = { w: img.width, h: img.height, src: `data:image/png;base64,${png.toString('base64')}` };
+}
+const TBEGIN = '/* TOOLS:BEGIN */';
+const TEND = '/* TOOLS:END */';
+src = readFileSync(WIDGET, 'utf8');
+const ta = src.indexOf(TBEGIN), tb = src.indexOf(TEND);
+if (ta < 0 || tb < 0) {
+  console.warn('!! TOOLS markers not found in widget - skipped injection');
+} else {
+  const body = Object.entries(toolUris)
+    .map(([k, v]) => `  ${k}: { w: ${v.w}, h: ${v.h}, src: "${v.src}" },`)
+    .join('\n');
+  src = src.slice(0, ta) + TBEGIN + '\nconst TOOL_ICONS = {\n' + body + '\n};\n' + src.slice(tb);
+  writeFileSync(WIDGET, src);
+  console.log(`injected ${Object.keys(toolUris).length} tool bubbles into widget/claude-usage.jsx`);
 }

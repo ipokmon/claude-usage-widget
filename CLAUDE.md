@@ -40,6 +40,7 @@ regions are machine-written and hand edits are lost on the next run:
 | `/* SPRITES:BEGIN */ … END */` | `node tools/spritegen.mjs` | character animation strips |
 | `/* CAT:BEGIN */ … END */` | `node tools/spritegen.mjs` | cat animation strips |
 | `/* PROPS:BEGIN */ … END */` | `node tools/propgen.mjs` | background scenery |
+| `/* TOOLS:BEGIN */ … END */` | `node tools/propgen.mjs` | tool thought bubbles |
 
 `spritegen.mjs` runs two **jobs** through one pipeline - `character` and `cat` -
 each with its own grid, palette and scale. Sharing a palette would force the
@@ -418,6 +419,19 @@ Things that will bite:
   (`window_start` in fieldMap), never an assumed 7 days.
 - The widget command now prints usage.json, a `@@CW_STATS@@` line, then
   stats.json. A missing stats file shows dashes; usage rendering is unaffected.
+- **Tool thought bubble.** The top tool also shows as a bubble up-right of the
+  rabbit's head (art in propgen's `TOOL_ICON_ART`, mapping in the widget's
+  `TOOL_ICON_FOR`, unknown tools get the gear). It lives in its own `TOOLS`
+  block because `<Scenery>` renders every `PROPS` key, so a bubble there would
+  stand in the room at 0,0. It sits inside `.cw-actor` (travels, takes the cast
+  shadow) but outside `.cw-flip` (never mirrors to the far side). Position
+  `left: 42px; top: -10px` is the closest offset that overlaps no sprite pixel
+  in any frame of any upright pose, both facings (canvas sweep over every
+  offset; the raised-arms stretch frame is the binding one). Re-run that sweep
+  if sprites or bubble art change; 34/-1 and 38/-4 both sat on the ear. Hidden
+  at night (the sleep sprite's "z" owns that corner) and when stats are stale. Two icons
+  were redrawn after viewing at 8x: an open book read as eyes, ruled page
+  lines spelled "B". `check-stats.mjs` asserts the mapping and art agree.
 - `check-poll-cadence.mjs` sets `CLAUDE_PROJECTS_DIR` to an empty temp dir,
   because poll.mjs runs the stats scan too. Keep it that way, or the check reads
   your real transcripts.

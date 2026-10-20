@@ -41,6 +41,11 @@ double-count), caching each file's replies and tool calls in
 `cache/stats-index.json` so a run only re-reads changed files. `poll.mjs` calls
 it at most every 10 minutes; `node poller/stats.mjs` forces a run. The formulas
 live in `poller/stats-lib.mjs` and are checked by `node tools/check-stats.mjs`.
+The rabbit also thinks about the top tool (same 7-day window): a small thought bubble drifts in
+above its head (terminal for Bash, pencil for Edit, book for Read, new-file
+for Write, magnifier for Grep/Glob, globe for web tools, gear for anything
+else). It is hidden at night, when the sleeping rabbit's "z" has that spot.
+
 The row dims when stats.json is over 30 minutes old (the poller has stopped),
 and a label reads `partial` when part of the record is missing.
 
