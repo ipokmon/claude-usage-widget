@@ -21,6 +21,8 @@
 //
 // The endpoint is undocumented and WILL break eventually. See README.
 
+import { paceFor } from "./stats-lib.mjs";
+import { runStatsIfDue } from "./stats.mjs";
 import {
   METRICS,
   LABELS,
@@ -102,6 +104,16 @@ function recordFailure(reason, settings) {
 async function main() {
   trimLog();
 
+  // Its own 10-minute gate, independent of the usage fetch: transcripts are
+  // local, so this costs no request and should not wait on the endpoint.
+  // Own try/catch: a stats failure must never count as a usage failure.
+  try {
+    const statsError = runStatsIfDue();
+    if (statsError) logErr(statsError);
+  } catch (e) {
+    logErr(`stats: ${e?.message ?? e}`);
+  }
+
   const cached = readCache();
   const forced = process.argv.includes("--now");
   if (!forced && !shouldFetch(cached, Date.now())) return; // silent, no request
@@ -152,6 +164,20 @@ async function main() {
   const prev = cached;
   for (const key of missing) {
     if (prev?.data?.[key]) data[key] = { ...prev.data[key], carried_over: true };
+  }
+
+  // Pace is projected at fetch time. The window is a week long, so the minutes
+  // until the next fetch move it by a rounding error.
+  if (data.weekly && !data.weekly.carried_over) {
+    data.weekly = {
+      ...data.weekly,
+      pace: paceFor({
+        pct: data.weekly.pct,
+        windowStart: data.weekly.window_start ?? null,
+        resetsAt: data.weekly.resets_at,
+        now: Date.now(),
+      }),
+    };
   }
 
   const changed = metricsChanged(prev?.data, data);

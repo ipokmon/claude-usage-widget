@@ -8,3 +8,18 @@ qa-redteam verdict, verbatim summary:
 - LOW: carry-over test value equals the stub's live weekly value. **Not changed**: in `noweekly` mode the stub omits `seven_day` entirely, so pct 2 can only come from carry-over.
 - LOW: filter-syntax examples still use `display_name=Fable`. Left as generic syntax docs.
 - Not tested by QA: Übersicht render. Verified separately in the Übersicht mirror (two bars, 0 held/errors) after a live `poll.mjs --now`.
+
+## 2026-10-19 | derived stats (pace, streak, top tool, peak hour) | PASS WITH ISSUES
+
+Round 1: PASS WITH ISSUES. All 7 criteria verified; independent recount matched stats.json exactly (files, replies, tool calls, streak, top tool, peak hour). 4 MED:
+- stats failure in catch path escaped into the usage poll (EISDIR repro) -> **fixed**: own try/catch in poll.mjs, non-throwing catch path.
+- unreadable transcript silently dropped -> **fixed**: keeps previous parse, else every stat flagged partial.
+- no scanner tests -> **fixed**: fixture section in check-stats.
+- subagent inclusion undisclosed -> **fixed**: deliberately included, stated in README.
+LOWs fixed: failure tooltips, config help text, at_limit status at 100%, widget window fallbacks, shared date helper, ties/"including today" documented, stale-row dimming, ENOENT skip.
+
+Round 2 (re-verify): PASS WITH ISSUES. All MEDs confirmed fixed by re-running repros; recount still exact (Bash 336/530, peak 22h 260/509, streak 2). Remaining LOWs:
+- partial checks could not fail (fixture mtimes = now) -> **fixed**: fixtures backdated, asserts partial false before / true after.
+- keep-previous-parse path untested -> **fixed**: added check.
+- symlink guard itself not pinned (Dirent already excludes links) -> accepted.
+Not tested by QA: real Übersicht render (verified separately in the mirror), DST on streak/peak, Claude Code's mtime pruning assumption.

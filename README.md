@@ -9,6 +9,8 @@ redecorates itself every month.
 │  Claude Usage            ● stale│
 │  5-hour limit   resets in 2h 24m│  42%
 │  Weekly (all models)            │  13%
+│  On pace for ~26% by reset      │
+│  12d     │ Bash      │ 9pm      │  <- streak / top tool / peak hour
 │ ┌─────────────────────────────┐ │
 │ │  ╻    ╭─╮      ▤        ⬛  ♣ │ │  <- character stage
 │ │ ═╹════╰─╯══▬▬▬══════════════ │ │
@@ -22,6 +24,28 @@ models). A third bar, weekly (Fable), was removed on 2026-10-19 because the
 model is no longer in use; the payload still carries that limit in its
 `limits` array if it is ever wanted back (see the filter-bracket syntax under
 setup step 6).
+
+Under the bars sit four derived stats:
+
+| Stat | Definition | Source |
+| --- | --- | --- |
+| Pace | Weekly % used ÷ fraction of the window elapsed: the % you reach at reset if the week continues like it started. When that crosses 100% before reset, it says when. Reads "too early" for the first 24h (too noisy), "n/a" without a window start, "limit reached" at 100%, and is hidden on a held bar. | usage payload: `seven_day` + `seven_day_breakdown.window_started_at` |
+| Streak | Consecutive local days with at least one Claude reply (subagent replies included). Today counts once used; until then yesterday's run stays alive. Shows `N+d` when the run reaches the oldest transcript Claude Code has kept. | transcripts |
+| Top tool | Most-called tool over the last 7 local dates including today, every tool counted, subagents' calls included (MCP names shortened). Ties go alphabetically. | transcripts |
+| Peak hour | Local hour with the most Claude replies over the last 14 local dates including today, subagent replies included; needs 20+ replies. Ties go to the earlier hour. | transcripts |
+
+"Transcripts" means `~/.claude/projects/**/*.jsonl`: **this Mac's Claude Code
+only**, not claude.ai chats, other machines or cloud sessions. `poller/stats.mjs`
+scans them (symlinked folders skipped, so the post-move `-Desktop-` links do not
+double-count), caching each file's replies and tool calls in
+`cache/stats-index.json` so a run only re-reads changed files. `poll.mjs` calls
+it at most every 10 minutes; `node poller/stats.mjs` forces a run. The formulas
+live in `poller/stats-lib.mjs` and are checked by `node tools/check-stats.mjs`.
+The row dims when stats.json is over 30 minutes old (the poller has stopped),
+and a label reads `partial` when part of the record is missing.
+
+Subagents count because their work is Claude Code doing your task; excluding
+them would make "top tool" undercount exactly the heavy agentic sessions.
 
 The payload contains **no token counts** of any kind, only percentages, reset
 times and credit amounts.
