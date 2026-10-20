@@ -1,6 +1,6 @@
 # STATUS: claude-usage-widget
 
-**State:** shipped (live); branches `remove-fable-bar` (PR #5) and `usage-stats` awaiting merge
+**State:** shipped (live), main at abba21e
 **Last session:** 2026-10-19 | **Last QA:** PASS WITH ISSUES (2026-10-19, issues fixed)
 
 ## Working (verified)
@@ -9,26 +9,24 @@
 - All five checkers pass (stats, poll cadence, seasons, sprites, cat rules).
 
 ## In progress
-- PRs for Fable removal and usage stats. launchd runs this working tree, so both are already live on the desktop.
-- Tool thought bubble over the rabbit (branch `tool-icon`, stacked on `usage-stats`): shows the 7-day top tool; hidden at night and when stats are stale.
+- none
 
 ## Known issues
 | Sev | Issue | Since |
 |---|---|---|
 
 ## Blocked on / needs CEO
-- Merge the remove-fable-bar PR.
-- Merge the usage-stats PR.
-- Merge the tool-icon PR (after #5 and #6).
+- none
 
 ## Mocked or stubbed (must be replaced before ship)
 - none
 
 ## Next 3 actions
-1. Merge PRs once approved.
-2. Glance at the bubble in daytime on the real desktop (only verified in the mirror; it is hidden at night).
+1. Glance at the tool bubble on the real desktop in daytime (verified only in mirror clones; hidden at night).
+2. Stale local branches (remove-fable-bar, usage-stats, tool-icon) can be pruned; remote ones left in place.
 
 ## Session log (newest first, 1-2 lines each)
+- 2026-10-19: merged PRs #5, #6, #7 to main (CEO approval in chat); checkout on main, live poll OK.
 - 2026-10-19: added tool thought bubble (7 icons, zero-overlap placement found by pixel sweep).
 - 2026-10-19: added pace, streak, top tool, peak hour (transcript scanner with per-file index; symlink-safe).
 - 2026-10-19: removed weekly (Fable) bar; fixed PROJECT path after the move off ~/Desktop.
