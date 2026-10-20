@@ -393,6 +393,20 @@ stylesheet is global once the widget has rendered, so every clone styles itself
 correctly. That turns 24 screenshot round-trips into one, and side-by-side is
 the only way spacing and shadow-direction mistakes are actually visible.
 
+## Battery mode
+
+`command` also prints the first line of `pmset -g batt` after `@@CW_POWER@@`;
+`powerSourceFor()` maps it to `data-power` on `.cw-root`. On battery every
+animation is paused (`!important`, to beat the films' inline `animation`
+shorthand) and the card drops `backdrop-filter` for a more opaque background.
+This took the widget's WebKit renderer from ~10% CPU to ~0%. Unknown or missing
+output renders as AC, so a desktop Mac never freezes. Keep every battery rule
+behind `.cw-root[data-power="battery"]`, and keep the block contiguous:
+
+```bash
+node tools/check-power.mjs
+```
+
 ## Derived stats (2026-10-19)
 
 Pace, streak, top tool and peak hour. Definitions are in README; formulas in

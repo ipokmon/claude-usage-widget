@@ -32,10 +32,16 @@ const PROJECT = "/Users/ivanwu/claude/agents/claude-usage-widget";
 //
 // stats.json (streak, top tool, peak hour) rides along after a separator line.
 // It is optional: a missing file prints null and the stats row says so.
+//
+// The power source rides last: the first line of `pmset -g batt`. On battery
+// the room freezes and the card drops its blur (see powerSourceFor); the
+// 2026-10-20 audit measured the always-on animations at ~10% CPU.
 const STATS_SEPARATOR = "@@CW_STATS@@";
+const POWER_SEPARATOR = "@@CW_POWER@@";
 export const command =
   `cat "${PROJECT}/cache/usage.json" 2>/dev/null || echo '{"__nocache":true}'; ` +
-  `echo; echo '${STATS_SEPARATOR}'; cat "${PROJECT}/cache/stats.json" 2>/dev/null || echo null`;
+  `echo; echo '${STATS_SEPARATOR}'; cat "${PROJECT}/cache/stats.json" 2>/dev/null || echo null; ` +
+  `echo; echo '${POWER_SEPARATOR}'; pmset -g batt 2>/dev/null | head -n 1`;
 
 // The render tick, not the fetch tick. This only re-reads a ~1KB local file,
 // so the cost is nil, and halving it halves the tail latency between the poller
@@ -72,6 +78,18 @@ function currentHour() {
   if (DEBUG_HOUR !== null) return DEBUG_HOUR;
   const d = new Date();
   return d.getHours() + d.getMinutes() / 60;
+}
+
+/**
+ * "battery" | "ac" from the first line of `pmset -g batt`, or null when the
+ * line is missing or unrecognised. null renders as AC: never freeze the room on
+ * a guess. UPS power counts as AC (a desktop on a UPS has no battery to save).
+ */
+function powerSourceFor(text) {
+  const line = (text || "").trim();
+  if (line.includes("'Battery Power'")) return "battery";
+  if (line.includes("'AC Power'") || line.includes("'UPS Power'")) return "ac";
+  return null;
 }
 
 /** Theme boundary per spec: dark 20:00-07:00. Independent of activity. */
@@ -544,7 +562,9 @@ export const render = ({ output }) => {
 
   let cache = null;
   let parseError = false;
-  const [usageRaw = "", statsRaw = ""] = (output || "").split(STATS_SEPARATOR);
+  const [usageRaw = "", rest = ""] = (output || "").split(STATS_SEPARATOR);
+  const [statsRaw = "", powerRaw = ""] = rest.split(POWER_SEPARATOR);
+  const power = powerSourceFor(powerRaw);
   const raw = usageRaw.trim();
   if (raw) {
     try {
@@ -568,7 +588,13 @@ export const render = ({ output }) => {
   const noCache = Boolean(cache?.__nocache);
 
   return (
-    <div className="cw-root" data-theme={theme} data-activity={activity} data-season={season}>
+    <div
+      className="cw-root"
+      data-theme={theme}
+      data-activity={activity}
+      data-season={season}
+      data-power={power ?? undefined}
+    >
       <style>{CSS}</style>
 
       <div className="cw-card">
@@ -747,6 +773,25 @@ const CSS = `
   color: var(--text);
   overflow: hidden;
 }
+
+/* ---- battery mode ----
+   On battery the room freezes in its current pose and the card swaps frosted
+   glass for a near-opaque panel. The always-on films, timelines and animated
+   cast shadows were ~10% CPU in the WebKit renderer, and the blur was
+   re-composited under every repaint. !important is needed to beat the inline
+   animation shorthand on the films. Pausing mid-timeline is safe: sprite
+   coverage holds at every instant, so exactly one pose stays visible. */
+.cw-root[data-power="battery"] *,
+.cw-root[data-power="battery"] *::before,
+.cw-root[data-power="battery"] *::after {
+  animation-play-state: paused !important;
+}
+.cw-root[data-power="battery"] .cw-card {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.cw-root[data-power="battery"][data-theme="light"] { --card-bg: rgba(16,24,46,0.94); }
+.cw-root[data-power="battery"][data-theme="dark"]  { --card-bg: rgba(9,14,30,0.95); }
 
 .cw-header {
   display: flex; align-items: center; justify-content: space-between;

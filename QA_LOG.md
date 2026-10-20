@@ -1,5 +1,14 @@
 # QA log
 
+## 2026-10-20 | battery mode (pause animations, drop blur on battery) | PASS WITH ISSUES
+
+qa-redteam (Sonnet) verdict, verbatim summary: AC1-AC5, AC7 VERIFIED; AC8 re-measured (renderer pid 1454 at 0.0% over 3 samples vs 9.7% baseline); AC6 FAILED as worded, benign in effect. No backtick or `${` in the CSS literal; generated blocks untouched; missing stats.json / missing pmset / old-format output all parse.
+- MED: AC6 claimed the CSS text was unchanged and the checker only guarded one leak. **Fixed**: AC6 reworded to behavioural equivalence; check-power now asserts every battery-block selector requires `data-power="battery"`; the rest of the CSS was diffed against abba21e once and was identical (not kept in the gate, it would fail on any later CSS edit).
+- LOW: live pmset check accepted either value. **Fixed**: expected value now read from pmset directly.
+- LOW: sprite-coverage argument unconfirmed for the cat. **No change needed**: check-sprite-coverage sweeps both `character` and `cat` (line 93).
+- LOW: checker is source-string matching, no DOM render. **Accepted**; runtime verified separately in the Übersicht mirror (data-power="battery", 0 running / 24 paused animations, backdrop none, bg alpha 0.94).
+- Not tested: AC path live (machine on battery), plug/unplug switch, non-English pmset output.
+
 ## 2026-10-19 | remove weekly (Fable) bar | PASS WITH ISSUES
 
 qa-redteam verdict, verbatim summary:
