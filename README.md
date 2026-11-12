@@ -156,47 +156,6 @@ Sessions don't last forever. The symptom is the widget showing the amber
 **stale** dot and `poller.log` reporting `HTTP 401`. Redo step 5 above; nothing
 else needs to change.
 
-## Activity map
-
-A radial map under the stats row: a centre `C` and ten stations (You, Model,
-Files, Shell, Web, Browser, Agents, Skills, Memory, Hooks). Spokes thicken with
-the number of tool calls in the last 15 minutes, a station hit in the last 8
-seconds glows, and a red dot marks errors or permission refusals. Idea from the
-`lot-map` Claude Code mod; nothing of its code is used. The `Hooks` station is
-reserved and nothing feeds it yet.
-
-It is live, so it needs a Claude Code hook. `hooks/log-event.mjs` appends one
-line per event to `cache/events.jsonl` (gitignored; rotates to `events.1.jsonl`
-past 512 KB). Each line holds only `ts`, `event`, `tool` (the tool's name),
-`station`, `status` and `sid` (8 hex of a sha256 of the session id). It never
-writes tool inputs, outputs, commands, file paths, cwd or prompt text; the
-privacy test is in `tools/check-activity.mjs`. It makes no network calls, prints
-nothing, always exits 0, and logs its own failures to `hooks/error.log`.
-Measured cost is about 3 ms over a bare `node` start.
-
-Add this to `~/.claude/settings.json` (merge into any existing `hooks` key). The
-path is the main checkout, not a worktree:
-
-```json
-{
-  "hooks": {
-    "PostToolUse":        [{ "matcher": "*", "hooks": [{ "type": "command", "command": "node ~/claude/agents/claude-usage-widget/hooks/log-event.mjs", "timeout": 5 }] }],
-    "PostToolUseFailure": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "node ~/claude/agents/claude-usage-widget/hooks/log-event.mjs", "timeout": 5 }] }],
-    "PermissionDenied":   [{ "matcher": "*", "hooks": [{ "type": "command", "command": "node ~/claude/agents/claude-usage-widget/hooks/log-event.mjs", "timeout": 5 }] }],
-    "UserPromptSubmit":   [{ "hooks": [{ "type": "command", "command": "node ~/claude/agents/claude-usage-widget/hooks/log-event.mjs", "timeout": 5 }] }],
-    "Stop":               [{ "hooks": [{ "type": "command", "command": "node ~/claude/agents/claude-usage-widget/hooks/log-event.mjs", "timeout": 5 }] }],
-    "SubagentStop":       [{ "hooks": [{ "type": "command", "command": "node ~/claude/agents/claude-usage-widget/hooks/log-event.mjs", "timeout": 5 }] }]
-  }
-}
-```
-
-Notes:
-- `PostToolUse` fires only on success; errors come from `PostToolUseFailure` and refusals from `PermissionDenied` (auto-mode denials only, per the docs).
-- Station rules live in `poller/stations-lib.mjs`: Read/Write/Edit/Glob/Grep/NotebookEdit are Files, Bash is Shell, WebFetch/WebSearch and other MCP tools are Web, the two browser MCPs are Browser, Agent/Task* are Agents, Skill is Skills, memory MCPs and Write/Edit into a `.claude/projects/*/memory/` path are Memory. Anything else is counted as unclassified in the tooltip.
-- No file, or an empty one, shows "no activity yet". Unreadable lines are skipped and counted in the tooltip.
-- On battery the glow is paused with every other animation.
-- `CLAUDE_USAGE_EVENTS_DIR` redirects the hook's output; only the checker sets it.
-
 ## Manual fallback
 
 Works with the scraper completely broken, and shares no code with it:
@@ -218,7 +177,7 @@ widget stays clean.
 |---|---|---|
 | launchd → `poll.mjs` | **60 s** | How often the script *runs*, not how often it fetches. Most runs exit without making a request. |
 | Poller → endpoint | **60 s – 10 min, adaptive** | Fetches at the floor while your usage is moving, doubles the gap toward the ceiling while it is not, and always fetches when a limit window resets. |
-| Widget → cache file | **5 s** | A local `cat`, `pmset` and `tail -n 300` (~14 ms per tick). 5 s keeps the activity map's pulses (8 s) fresh; it was 30 s before the map. |
+| Widget → cache file | **30 s** | Just a local `cat` of a ~1 KB file. Cheap, and keeps the "resets in…" countdowns honest. |
 | Character animation | continuous | Pure CSS, independent of all of the above. |
 
 ### Why adaptive rather than a shorter fixed interval
