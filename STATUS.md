@@ -1,7 +1,7 @@
 # STATUS: claude-usage-widget
 
 **State:** shipped (live), main at 08b4e09 (battery mode)
-**Last session:** 2026-10-20 | **Last QA:** PASS WITH ISSUES (2026-10-20, issues fixed)
+**Last session:** 2026-11-12 | **Last QA:** PASS WITH ISSUES (2026-10-20, issues fixed)
 
 ## Working (verified)
 - Live scrape, adaptive polling, two bars: 5-hour and weekly (all models). Verified via live poll + Übersicht mirror 2026-10-19.
@@ -29,6 +29,7 @@
 3. Stale local branches (remove-fable-bar, usage-stats, tool-icon) can be pruned; remote ones left in place.
 
 ## Session log (newest first, 1-2 lines each)
+- 2026-11-12: activity map built (PR #8), merged, then rolled back the same day at CEO request (keep it as the lot-map app mod only). Hook removed from ~/.claude/settings.json; code reverted, QA_LOG entry kept.
 - 2026-10-20: battery mode after a laptop battery audit found the widget the largest steady drain. SPEC.md created. tools/check-power.mjs added.
 - 2026-10-19: desktop showed pre-merge widget; Übersicht (up since 21:54) missed the 22:45 checkout. Restarted it; new layout confirmed by screenshot.
 - 2026-10-19: merged PRs #5, #6, #7 to main (CEO approval in chat); checkout on main, live poll OK.
