@@ -18,6 +18,7 @@ export const MAX_BYTES = 512 * 1024;
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const TOOL_EVENTS = new Set(["PostToolUse", "PostToolUseFailure", "PermissionDenied"]);
 const ERROR_EVENTS = new Set(["PostToolUseFailure", "PermissionDenied"]);
+const SAFE_TOOL = /^[A-Za-z0-9_.:-]{1,80}$/;
 const STDIN_LIMIT = 4 * 1024 * 1024;
 
 /** Build the stored record from a hook payload, or null for events not logged. */
@@ -33,7 +34,8 @@ export function buildRecord(payload, now = Date.now()) {
   // failures come from PostToolUseFailure and refusals from PermissionDenied.
   if (TOOL_EVENTS.has(event)) {
     if (typeof payload.tool_name !== "string") return null;
-    tool = payload.tool_name.slice(0, 80);
+    // Tool names are server-defined: store only a plain identifier, never free text.
+    tool = SAFE_TOOL.test(payload.tool_name) ? payload.tool_name : "invalid";
     station = classifyTool(payload.tool_name, payload.tool_input);
     const r = payload.tool_response;
     if (ERROR_EVENTS.has(event) || (r && typeof r === "object" && r.is_error === true)) status = "err";
@@ -67,7 +69,10 @@ export function appendRecord(rec, dir = join(ROOT, "cache"), maxBytes = MAX_BYTE
 
 function logError(err) {
   try {
-    appendFileSync(join(ROOT, "hooks", "error.log"), `${new Date().toISOString()} ${String(err?.message ?? err).slice(0, 200)}\n`);
+    // A JSON.parse message quotes the input, so never log it: fixed text only.
+    const msg = err instanceof SyntaxError ? "bad stdin JSON" : String(err?.code ?? err?.name ?? "error");
+    const dir = process.env.CLAUDE_USAGE_EVENTS_DIR ? join(process.env.CLAUDE_USAGE_EVENTS_DIR, "..") : join(ROOT, "hooks");
+    appendFileSync(join(dir, "error.log"), `${new Date().toISOString()} ${msg}\n`);
   } catch {
     // nothing left to try
   }

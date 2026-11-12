@@ -4,6 +4,8 @@
 // Privacy: classifyTool may READ a file path to spot a memory write, but only
 // ever returns a station name. Callers must never store the path.
 
+import { posix } from "node:path";
+
 export const STATIONS = ["you", "model", "files", "shell", "web", "browser", "agents", "skills", "memory", "hooks"];
 
 const FILE_TOOLS = new Set(["Read", "Write", "Edit", "MultiEdit", "Glob", "Grep", "NotebookEdit", "NotebookRead"]);
@@ -31,7 +33,7 @@ export function classifyTool(toolName, toolInput) {
   }
   if (WRITE_TOOLS.has(toolName)) {
     const p = toolInput && typeof toolInput === "object" ? toolInput.file_path ?? toolInput.notebook_path : null;
-    if (typeof p === "string" && MEMORY_PATH.test(p)) return "memory";
+    if (typeof p === "string" && MEMORY_PATH.test(posix.normalize(p))) return "memory";
   }
   if (FILE_TOOLS.has(toolName)) return "files";
   if (SHELL_TOOLS.has(toolName)) return "shell";

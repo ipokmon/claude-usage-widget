@@ -335,8 +335,8 @@ function aggregate(events, now) {
   for (const e of events) {
     const age = now - e.ts;
     if (age < 0 || age > ACT_WINDOW_MS) continue;
+    if (!Object.hasOwn(byStation, e.station)) continue;
     const st = byStation[e.station];
-    if (!st) continue;
     st.count += 1;
     total += 1;
     if (e.status === "err") st.errors += 1;

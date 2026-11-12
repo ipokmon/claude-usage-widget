@@ -54,6 +54,7 @@ eq(classifyTool("Write", { file_path: "/Users/a/.claude/projects/-p/memory/x.md"
 eq(classifyTool("Edit", { file_path: "/Users/a/.claude/projects/-p/memory/x.md" }), "memory", "Edit into memory dir -> memory");
 eq(classifyTool("Read", { file_path: "/Users/a/.claude/projects/-p/memory/x.md" }), "files", "Read of a memory file stays files");
 eq(classifyTool("Write", { file_path: "/Users/a/.claude/projects/-p/other.md" }), "files", "Write outside memory/ -> files");
+eq(classifyTool("Write", { file_path: "/a/.claude/projects/p/memory/../../../x" }), "files", "traversal out of memory/ -> files");
 eq(classifyTool("Write", null), "files", "Write with no input -> files");
 eq(classifyTool("mcp__vercel__list_projects"), "web", "other mcp -> web");
 eq(classifyTool("SomethingNew"), "other", "unknown -> other");
@@ -81,6 +82,8 @@ const ev = (agoS, station, status = "ok") => ({ ts: NOW - agoS * 1000, station, 
   eq(a.max, 2, "max");
   check(a.byStation.files.pulsing && !a.byStation.shell.pulsing, "pulse only within PULSE_MS");
   eq(aggregate([ev(1, "bogus")], NOW).total, 0, "unknown station ignored");
+  const pr = aggregate([ev(1, "__proto__"), ev(1, "constructor"), ev(1, "files")], NOW);
+  eq([pr.total, pr.max], [1, 1], "prototype-key stations are ignored, not counted");
   eq(aggregate([], NOW).total, 0, "empty -> zero");
 }
 {
@@ -116,6 +119,7 @@ const payload = (over = {}) => ({
   eq(buildRecord(payload({ hook_event_name: "Stop" })).tool, null, "Stop has no tool");
   eq(buildRecord(payload({ hook_event_name: "SessionStart" })), null, "unlogged event -> null");
   eq(buildRecord(payload({ tool_name: undefined })), null, "tool event without a name -> null");
+  eq(buildRecord(payload({ tool_name: "mcp__x__/Users/victim/secret sk-ant-AAAA" })).tool, "invalid", "tool name with path/secret is not stored");
   eq(buildRecord(null), null, "null payload -> null");
   eq(buildRecord(payload({ session_id: undefined })).sid, null, "no session id -> null sid");
 }
@@ -145,6 +149,9 @@ const run = (dir, input) =>
   writeFileSync(blocker, "x");
   const w = run(join(blocker, "sub"), JSON.stringify(payload()));
   eq([w.status, w.stdout], [0, ""], "unwritable cache dir -> exit 0, silent");
+  run(dir, "secret-tok-123 not json");
+  const elog = join(dir, "..", "error.log");
+  check(existsSync(elog) && !readFileSync(elog, "utf8").includes("secret-tok"), "error.log never quotes stdin");
 
   // rotation (library call with a tiny cap)
   const rot = mkdtempSync(join(tmpdir(), "cw-rot-"));
@@ -153,7 +160,6 @@ const run = (dir, input) =>
   check(files.includes("events.1.jsonl") && files.includes("events.jsonl"), "rotates to events.1.jsonl past the cap");
   check(readFileSync(join(rot, "events.jsonl"), "utf8").length <= 500 + 200, "live file stays near the cap");
   check(MAX_BYTES === 512 * 1024, "cap is 512 KB");
-  check(existsSync(join(ROOT, "hooks", "error.log")) === existsSync(join(ROOT, "hooks", "error.log")), "error.log is optional");
 }
 
 console.log(failures ? `\n${failures} FAILED` : "\nall activity rules hold");
