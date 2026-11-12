@@ -1,17 +1,17 @@
 # STATUS: claude-usage-widget
 
-**State:** shipped (live); activity map merged (PR #8, merge d16bafb), hook registered in ~/.claude/settings.json 2026-11-12
+**State:** shipped (live) on main at 08b4e09; activity map built on branch claude/widget-activity-map-f61330, not merged, hook not installed
 **Last session:** 2026-11-12 | **Last QA:** PASS WITH ISSUES (2026-11-12, issues fixed)
 
 ## Working (verified)
 - Live scrape, adaptive polling, two bars: 5-hour and weekly (all models). Verified via live poll + Übersicht mirror 2026-10-19.
 - Derived stats (2026-10-19): weekly pace line, streak, top tool (7d), peak hour (14d). Stats match an independent recount by qa-redteam. Rendered in Übersicht mirror.
 - Battery mode (2026-10-20): on battery all animations pause and the card drops its blur. Widget renderer 9.7% CPU -> 0.0-0.1%, measured with `top`; verified in the Übersicht mirror.
-- Activity map (2026-11-12, merged): `hooks/log-event.mjs` logs tool calls to `cache/events.jsonl`; widget draws a radial map (both themes + empty state verified in a static React render, not live Übersicht). Hook wall time 54 ms per run vs 51 ms for bare `node -e 0` (30 runs), under the 60 ms target. Widget command ~14 ms per tick at 5 s refresh (20 runs, 300-line log).
+- Activity map (2026-11-12, branch only): `hooks/log-event.mjs` logs tool calls to `cache/events.jsonl`; widget draws a radial map (both themes + empty state verified in a static React render, not live Übersicht). Hook wall time 54 ms per run vs 51 ms for bare `node -e 0` (30 runs), under the 60 ms target. Widget command ~14 ms per tick at 5 s refresh (20 runs, 300-line log).
 - All seven checkers pass (stats, poll cadence, seasons, sprites, cat rules, power, activity).
 
 ## In progress
-- Activity map live: hook registered 2026-11-12 and verified firing (a real PostToolUseFailure line landed in cache/events.jsonl). Needs an Übersicht restart to load the merged widget. **Unmeasured:** end-to-end renderer CPU on AC at the new 5 s refresh (the live widget runs the main checkout, so it could not be measured from the branch); measure with `top` after merge + Übersicht restart, and revert `refreshFrequency` if it is not near the 0.0-0.1% battery figure. PostToolUse has no documented error field; errors come from PostToolUseFailure/PermissionDenied (docs only, no live hook run yet).
+- Activity map awaiting merge + hook install (README "Activity map" has the settings.json snippet). **Unmeasured:** end-to-end renderer CPU on AC at the new 5 s refresh (the live widget runs the main checkout, so it could not be measured from the branch); measure with `top` after merge + Übersicht restart, and revert `refreshFrequency` if it is not near the 0.0-0.1% battery figure. PostToolUse has no documented error field; errors come from PostToolUseFailure/PermissionDenied (docs only, no live hook run yet).
 
 ## Known issues
 | Sev | Issue | Since |
