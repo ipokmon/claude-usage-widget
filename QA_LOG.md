@@ -47,3 +47,15 @@ Round 2: PASS WITH ISSUES. Remaining LOWs:
 - "matches" check compares keys only -> renamed to say so.
 - title "last undefined days" -> **fixed** guard.
 Not tested by QA: real Übersicht pixels; verified separately via mirror clones at 2x in day/morning/evening.
+
+## 2026-11-12 | activity map (build model: Sonnet 5.5; QA via general-purpose agent running qa-redteam.md, as the qa-redteam type was not registered in the child session) | PASS WITH ISSUES
+
+Round 1: PASS WITH ISSUES. AM1-AM5, AM7, AM8, AM11 verified; privacy probes (secret payloads, 3-5 MB inputs, nested edits) leaked nothing; exit 0/silent on every failure; 60 concurrent appends intact; generated blocks and AC CSS untouched.
+- MED STATUS had no hook timing or AC refresh cost (AM6/AM10) -> **fixed** for timing (54 ms vs 51 ms bare node) and tick cost (14 ms); end-to-end CPU at 5 s **recorded as unmeasured** (live widget runs main checkout), with a revert rule in STATUS.
+- LOW `station: "__proto__"` polluted aggregate -> **fixed** (Object.hasOwn) + test.
+- LOW tool name stored verbatim -> **fixed**: only `[A-Za-z0-9_.:-]{1,80}`, else "invalid" + test.
+- LOW error.log quoted stdin via JSON.parse message -> **fixed**: fixed text + test.
+- LOW memory path traversal / relative paths -> traversal **fixed** (posix.normalize) + test; relative and Windows paths **accepted** (macOS, absolute paths from Claude Code).
+- LOW checker tautology and writing the repo's error.log -> **fixed**.
+- LOW rotation race (two hooks rename over events.1.jsonl, losing old history) -> **accepted**, history is non-critical; live appends stay safe.
+Not tested by QA: live Übersicht render, a real hook run, AC CPU at 5 s, Windows paths.

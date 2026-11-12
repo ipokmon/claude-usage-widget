@@ -49,3 +49,33 @@ frosted glass for a near-opaque panel in the same colours.
 
 ## Open questions
 - none
+
+---
+
+# Activity map (2026-11-12)
+
+## Problem
+Ivan wants to see what Claude Code is doing right now (files, shell, web...) on the desktop, not just how much quota is used.
+
+## Non-goals
+Recording tool inputs/outputs or paths; any network call; a Hooks station feed; history beyond the last 300 log lines.
+
+## Acceptance criteria
+- [ ] AM1: `poller/stations-lib.mjs` `classifyTool` maps every rule in the brief (files, shell, web, browser, agents, skills, memory incl. memory-path Write/Edit, other mcp to web, unknown to other); each branch has a test that fails without it.
+- [ ] AM2: `hooks/log-event.mjs` appends exactly one JSON line with only `ts,event,tool,station,status,sid`; a secrets-laden payload leaves no input, output, command, path, cwd, prompt or raw session id in the file.
+- [ ] AM3: the hook exits 0 with empty stdout for garbage stdin, empty stdin and an unwritable cache dir; no network.
+- [ ] AM4: the log rotates to `events.1.jsonl` past a named size constant (512 KB).
+- [ ] AM5: PostToolUseFailure and PermissionDenied record `status: err`; UserPromptSubmit records You, Stop/SubagentStop record Model.
+- [ ] AM6: wall time per hook run is under 60 ms, measured and recorded in STATUS.
+- [ ] AM7: the widget command reads only `tail -n 300` of the log and still exits 0 when it is missing; usage, stats and power parsing are unchanged.
+- [ ] AM8: pure `aggregate` gives per-station count, errors, last hit within a 15-min window, ignores future-dated and out-of-window events; `parseEvents` skips and counts malformed lines.
+- [ ] AM9: the card renders a radial SVG map (spoke weight by count, glow within 8 s, red error dot) in both themes; missing/empty log renders "no activity yet" with no fake data.
+- [ ] AM10: on battery the glow is paused (existing rule) and `check-power` passes; refresh cost on AC measured and recorded.
+- [ ] AM11: `tools/check-activity.mjs` is in the gate; README has the settings snippet; `cache/events*.jsonl` and `hooks/error.log` are gitignored.
+
+## Design direction
+Same coral-on-cobalt palette as the bars: cold stations, coral when hit, red only for errors. Faint skeleton when empty so the layout does not jump.
+
+## Assumptions
+- PostToolUse has no documented error field, so errors come only from the failure and denial events (docs via claude-code-guide, not verified by a live hook run).
+- Refresh 5 s is affordable: command costs ~14 ms per tick.

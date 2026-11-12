@@ -38,17 +38,23 @@ const PROJECT = "/Users/ivanwu/claude/agents/claude-usage-widget";
 // 2026-10-20 audit measured the always-on animations at ~10% CPU.
 const STATS_SEPARATOR = "@@CW_STATS@@";
 const POWER_SEPARATOR = "@@CW_POWER@@";
+const EVENTS_SEPARATOR = "@@CW_EVENTS@@";
+// The activity map reads only the tail of the hook's log (hooks/log-event.mjs).
+const EVENTS_TAIL_LINES = 300;
 export const command =
   `cat "${PROJECT}/cache/usage.json" 2>/dev/null || echo '{"__nocache":true}'; ` +
   `echo; echo '${STATS_SEPARATOR}'; cat "${PROJECT}/cache/stats.json" 2>/dev/null || echo null; ` +
-  `echo; echo '${POWER_SEPARATOR}'; pmset -g batt 2>/dev/null | head -n 1`;
+  `echo; echo '${POWER_SEPARATOR}'; pmset -g batt 2>/dev/null | head -n 1; ` +
+  `echo '${EVENTS_SEPARATOR}'; tail -n ${EVENTS_TAIL_LINES} "${PROJECT}/cache/events.jsonl" 2>/dev/null || true`;
 
 // The render tick, not the fetch tick. This only re-reads a ~1KB local file,
 // so the cost is nil, and halving it halves the tail latency between the poller
 // writing a new number and the desktop showing it. Note when debugging: a
 // hand-set data-* attribute on .cw-root now survives only ~30s, so use
 // DEBUG_HOUR / DEBUG_MONTH below for anything longer than a glance.
-export const refreshFrequency = 30000;
+// 5s so the activity map's pulses (ACT_PULSE_MS) are not stale on arrival; the
+// cost was measured, see STATUS.md.
+export const refreshFrequency = 5000;
 
 // ---------------------------------------------------------------------------
 // Set to an hour 0-23 to force a time of day (e.g. 3 = night, 13 = day).
@@ -287,6 +293,109 @@ function StatsRow({ stats }) {
             : absent(peak, `Too few replies to call a peak (${peak?.sample}).`)
         }\n${scope}${err}${staleNote}`}
       />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Activity map: live tool-call stations, fed by hooks/log-event.mjs
+// ---------------------------------------------------------------------------
+
+const ACT_WINDOW_MS = 15 * 60 * 1000;
+const ACT_PULSE_MS = 8 * 1000;
+const ACT_STATIONS = ["you", "model", "files", "shell", "web", "browser", "agents", "skills", "memory", "hooks"];
+const ACT_LABEL = { you: "You", model: "Model", files: "Files", shell: "Shell", web: "Web", browser: "Browser", agents: "Agents", skills: "Skills", memory: "Memory", hooks: "Hooks" };
+
+/** Parse the log tail. Malformed lines are skipped and counted, never thrown on. */
+function parseEvents(text) {
+  const events = [];
+  let skipped = 0;
+  for (const line of String(text || "").split("\n")) {
+    const s = line.trim();
+    if (!s) continue;
+    try {
+      const e = JSON.parse(s);
+      if (e && typeof e === "object" && typeof e.ts === "number" && typeof e.station === "string") events.push(e);
+      else skipped += 1;
+    } catch {
+      skipped += 1;
+    }
+  }
+  return { events, skipped };
+}
+
+/**
+ * Per-station counts over the trailing window. Future-dated events (clock skew)
+ * are ignored rather than shown as "just now".
+ */
+function aggregate(events, now) {
+  const byStation = {};
+  for (const s of [...ACT_STATIONS, "other"]) byStation[s] = { count: 0, errors: 0, lastTs: null, pulsing: false };
+  let total = 0;
+  for (const e of events) {
+    const age = now - e.ts;
+    if (age < 0 || age > ACT_WINDOW_MS) continue;
+    if (!Object.hasOwn(byStation, e.station)) continue;
+    const st = byStation[e.station];
+    st.count += 1;
+    total += 1;
+    if (e.status === "err") st.errors += 1;
+    if (st.lastTs === null || e.ts > st.lastTs) st.lastTs = e.ts;
+  }
+  let max = 0;
+  for (const st of Object.values(byStation)) {
+    st.pulsing = st.lastTs !== null && now - st.lastTs <= ACT_PULSE_MS;
+    if (st.count > max) max = st.count;
+  }
+  return { total, byStation, max };
+}
+
+const ACT_W = 318;
+const ACT_H = 112;
+const ACT_CX = ACT_W / 2;
+const ACT_CY = 55;
+const ACT_RX = 124;
+const ACT_RY = 40;
+
+/** Station positions on an ellipse, "you" at 12 o'clock, clockwise. */
+function stationXY(i) {
+  const a = -Math.PI / 2 + (i * 2 * Math.PI) / ACT_STATIONS.length;
+  return { x: ACT_CX + ACT_RX * Math.cos(a), y: ACT_CY + ACT_RY * Math.sin(a) };
+}
+
+function ActivityMap({ agg, skipped, seen }) {
+  const empty = seen === 0;
+  const quiet = !empty && agg.total === 0;
+  const title = empty
+    ? "No activity yet. Install the hook from the README (Activity map)."
+    : `${agg.total} tool calls in the last 15 min${agg.byStation.other.count ? ` (${agg.byStation.other.count} unclassified)` : ""}${skipped ? `\n${skipped} unreadable log lines skipped` : ""}`;
+  return (
+    <div className="cw-act" data-state={empty ? "empty" : quiet ? "quiet" : "live"} title={title}>
+      <svg viewBox={`0 0 ${ACT_W} ${ACT_H}`} width={ACT_W} height={ACT_H} role="img" aria-label="Claude Code activity map">
+        {ACT_STATIONS.map((name, i) => {
+          const { x, y } = stationXY(i);
+          const st = agg.byStation[name];
+          const w = st.count && agg.max ? 0.8 + (2.6 * st.count) / agg.max : 0.6;
+          return (
+            <g key={name} className="cw-act-st" data-hot={st.count ? "true" : undefined}>
+              <line className="cw-act-spoke" x1={ACT_CX} y1={ACT_CY} x2={x} y2={y} strokeWidth={w} />
+              {st.pulsing && <circle className="cw-act-glow" cx={x} cy={y} r="7" />}
+              <circle className="cw-act-node" cx={x} cy={y} r="4.5" />
+              {st.errors > 0 && <circle className="cw-act-err" cx={x + 5} cy={y - 5} r="2.6" />}
+              <text className="cw-act-label" x={x} y={y + (y > ACT_CY ? 15 : -9)} textAnchor="middle">
+                {ACT_LABEL[name]}
+                {st.count ? ` ${st.count}` : ""}
+              </text>
+            </g>
+          );
+        })}
+        <circle className="cw-act-core" cx={ACT_CX} cy={ACT_CY} r="11" />
+        <text className="cw-act-core-label" x={ACT_CX} y={ACT_CY + 3} textAnchor="middle">
+          C
+        </text>
+      </svg>
+      {empty && <div className="cw-act-msg">no activity yet</div>}
+      {quiet && <div className="cw-act-msg">quiet · nothing in 15 min</div>}
     </div>
   );
 }
@@ -563,7 +672,10 @@ export const render = ({ output }) => {
   let cache = null;
   let parseError = false;
   const [usageRaw = "", rest = ""] = (output || "").split(STATS_SEPARATOR);
-  const [statsRaw = "", powerRaw = ""] = rest.split(POWER_SEPARATOR);
+  const [statsRaw = "", powerAndEvents = ""] = rest.split(POWER_SEPARATOR);
+  const [powerRaw = "", eventsRaw = ""] = powerAndEvents.split(EVENTS_SEPARATOR);
+  const parsedEvents = parseEvents(eventsRaw);
+  const activity_ = aggregate(parsedEvents.events, Date.now());
   const power = powerSourceFor(powerRaw);
   const raw = usageRaw.trim();
   if (raw) {
@@ -681,6 +793,8 @@ export const render = ({ output }) => {
         </div>
 
         {hasData && <StatsRow stats={stats} />}
+
+        <ActivityMap agg={activity_} skipped={parsedEvents.skipped} seen={parsedEvents.events.length} />
 
         {/* ---- character stage: kept visually separate from the data ---- */}
         <div className="cw-stage">
@@ -883,6 +997,28 @@ const CSS = `
 .cw-stat-label {
   font-size: 9.5px; color: var(--text-2);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---- activity map ----
+   Spokes are weighted by count in the 15-min window; a glow marks a station hit
+   in the last ACT_PULSE_MS; a red dot marks errors/refusals. The only motion is
+   the glow, which the battery rule above pauses with everything else. */
+.cw-act { position: relative; margin: 8px 16px 0; height: 112px; border-top: 1px solid var(--track); }
+.cw-act svg { display: block; margin: 0 auto; overflow: visible; }
+.cw-act-spoke { stroke: var(--text-2); opacity: 0.22; stroke-linecap: round; }
+.cw-act-st[data-hot="true"] .cw-act-spoke { stroke: var(--coral); opacity: 0.8; }
+.cw-act-node { fill: var(--track); stroke: var(--text-2); stroke-width: 0.8; }
+.cw-act-st[data-hot="true"] .cw-act-node { fill: var(--coral); stroke: var(--coral-dim); }
+.cw-act-glow { fill: var(--coral); opacity: 0.35; transform-box: fill-box; transform-origin: center; animation: cw-act-glow 1.6s ease-in-out infinite; }
+@keyframes cw-act-glow { 0%,100% { transform: scale(0.8); opacity: 0.45; } 50% { transform: scale(1.5); opacity: 0.1; } }
+.cw-act-err { fill: #E5484D; stroke: var(--card-bg); stroke-width: 0.8; }
+.cw-act-label { font-size: 8.5px; fill: var(--text-2); }
+.cw-act-core { fill: var(--coral); }
+.cw-act-core-label { font-size: 10px; font-weight: 700; fill: #fff; }
+.cw-act[data-state="empty"] svg, .cw-act[data-state="quiet"] svg { opacity: 0.35; }
+.cw-act-msg {
+  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  text-align: center; font-size: 11px; color: var(--text-2);
 }
 
 .cw-empty { font-size: 12px; color: var(--text-2); line-height: 1.5; padding: 6px 0 2px; }

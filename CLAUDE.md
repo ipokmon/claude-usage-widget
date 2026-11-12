@@ -373,7 +373,7 @@ over a websocket on connect, so reload the page rather than touching the `.jsx`.
 
 Two things about that mirror, both learned by wasting time on them:
 
-- **Setting `data-*` by hand only lasts until the next refresh** — 30s now, not
+- **Setting `data-*` by hand only lasts until the next refresh** — 5s now, not
   60 — which re-renders from real `Date` and wipes it. For anything longer than
   a glance, set `DEBUG_HOUR` / `DEBUG_MONTH` in the file instead.
 - The page is empty for a moment after a reload while the websocket delivers
@@ -406,6 +406,21 @@ behind `.cw-root[data-power="battery"]`, and keep the block contiguous:
 ```bash
 node tools/check-power.mjs
 ```
+
+## Activity map (2026-11-12)
+
+Live radial map fed by `hooks/log-event.mjs` (a Claude Code hook) into
+`cache/events.jsonl`; README has the settings snippet. Three rules:
+
+- **The hook's privacy line is a test, not a promise.** It stores `ts, event, tool,
+  station, status, sid` and nothing else; `tools/check-activity.mjs` feeds it a
+  payload full of secrets and asserts none reach the file. Add a field only with a
+  matching assertion. It must exit 0, stay silent and make no network call.
+- **The widget cannot import modules**, so `parseEvents`/`aggregate` live in the
+  widget and the checker extracts them from the source. The classifier is in
+  `poller/stations-lib.mjs` (hook side). `ACT_STATIONS` must match `STATIONS`.
+- **A missing log is the normal empty state**, hence `|| true` on the `tail`.
+  Never draw stations as if active without events: no fake data.
 
 ## Derived stats (2026-10-19)
 
