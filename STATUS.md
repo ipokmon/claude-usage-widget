@@ -11,7 +11,7 @@
 - All seven checkers pass (stats, poll cadence, seasons, sprites, cat rules, power, activity).
 
 ## In progress
-- Activity map live: hook registered 2026-11-12 and verified firing (a real PostToolUseFailure line landed in cache/events.jsonl). Übersicht restarted 2026-11-12. AC CPU at 5 s refresh: Übersicht main process 2.2-2.8% (top, 4 samples); WebKit renderer not captured. CEO kept 5 s and will revisit. Earlier note: end-to-end renderer CPU on AC at the new 5 s refresh (the live widget runs the main checkout, so it could not be measured from the branch); measure with `top` after merge + Übersicht restart, and revert `refreshFrequency` if it is not near the 0.0-0.1% battery figure. PostToolUse has no documented error field; errors come from PostToolUseFailure/PermissionDenied (docs only, no live hook run yet).
+- Activity map live: hook registered 2026-11-12 and verified firing (a real PostToolUseFailure line landed in cache/events.jsonl). Needs an Übersicht restart to load the merged widget. **Unmeasured:** end-to-end renderer CPU on AC at the new 5 s refresh (the live widget runs the main checkout, so it could not be measured from the branch); measure with `top` after merge + Übersicht restart, and revert `refreshFrequency` if it is not near the 0.0-0.1% battery figure. PostToolUse has no documented error field; errors come from PostToolUseFailure/PermissionDenied (docs only, no live hook run yet).
 
 ## Known issues
 | Sev | Issue | Since |
