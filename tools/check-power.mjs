@@ -43,7 +43,7 @@ for (const [input, want] of cases) {
 }
 
 // ---- AC1: command emits a power segment, and render splits it off ----------
-const consts = ["const STATS_SEPARATOR", "const POWER_SEPARATOR"].map((s) => topLevel(s, ";\n")).join("\n");
+const consts = ["const STATS_SEPARATOR", "const POWER_SEPARATOR", "const EVENTS_SEPARATOR", "const EVENTS_TAIL_LINES"].map((s) => topLevel(s, ";\n")).join("\n");
 // `return` would hit ASI before the expression's first line break, so rebind it.
 const commandDecl = topLevel("export const command =", ";\n").replace("export const command =", "const command =");
 const command = new Function(`const PROJECT = ${JSON.stringify(ROOT)};\n${consts}\n${commandDecl}\nreturn command;`)();
@@ -54,10 +54,13 @@ const POWER_SEPARATOR = new Function(`${consts}; return POWER_SEPARATOR;`)();
 const STATS_SEPARATOR = new Function(`${consts}; return STATS_SEPARATOR;`)();
 // Mirror render's split exactly; check the real render uses the same two lines.
 const [usageRaw = "", rest = ""] = run.stdout.split(STATS_SEPARATOR);
-const [statsRaw = "", powerRaw = ""] = rest.split(POWER_SEPARATOR);
+const EVENTS_SEPARATOR = new Function(`${consts}; return EVENTS_SEPARATOR;`)();
+const [statsRaw = "", powerAndEvents = ""] = rest.split(POWER_SEPARATOR);
+const [powerRaw = ""] = powerAndEvents.split(EVENTS_SEPARATOR);
 check(
   src.includes('const [usageRaw = "", rest = ""] = (output || "").split(STATS_SEPARATOR);') &&
-    src.includes('const [statsRaw = "", powerRaw = ""] = rest.split(POWER_SEPARATOR);'),
+    src.includes('const [statsRaw = "", powerAndEvents = ""] = rest.split(POWER_SEPARATOR);') &&
+    src.includes('const [powerRaw = "", eventsRaw = ""] = powerAndEvents.split(EVENTS_SEPARATOR);'),
   "render splits usage | stats | power in that order",
 );
 check(!statsRaw.includes("pmset") && !statsRaw.includes("Power'"), "power line does not leak into stats segment");

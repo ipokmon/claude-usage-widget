@@ -14,3 +14,7 @@ capture/
 
 # macOS
 .DS_Store
+
+# Activity map hook data
+cache/events*.jsonl
+hooks/error.log
